@@ -175,10 +175,11 @@ while True:
         tmp = irc.is_ping(line)
         if tmp:
             irc.send_pong(tmp)
-            if not joined:
-                irc.join(channel)
-                joined = True
             continue
+
+        if not joined and line == ":"+nick+" MODE "+nick+" :+i":
+            irc.join(channel)
+            joined = True
 
         if not joined:
             continue
