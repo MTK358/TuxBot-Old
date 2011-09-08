@@ -1,50 +1,25 @@
-# IF YOU ARE NOT ABLE TO READ THIS DOCUMENT, IT MAY BE BECAUSE IT IS WRITTEN IN UNICODE, UTF-8.
-# IT MAY ALSO BE BECAUSE LINUX USES LF NEWLINES INSTEAD OF WINDOWS'S CRLF NEWLINES.
-# I WILL *NOT* CREATE A WINDOWS VERSION OF THIS DOCUMENT.
-# I WILL *NOT* CREATE A NON-UTF VERSION OF THIS DOCUMENT.
-#
 # ------------------------------
 # ToBeFree's TuxBot Feature list
 # ------------------------------
-# This is a list of everything I
-# could think of as new functions
-# for TuxBot.
-# These functions may be really
-# hard to implement, so do not use
-# this list as a "ToDo"-list.
-# Use this list as a list of
-# maybe impossible-to-realize
-# suggestions of a Python-noob.
+# This is a list of everything I could think of as new functions for TuxBot.
+# These functions may be really hard to implement, so do not use this list as a "ToDo"-list.
+# Use this list as a list of maybe impossible-to-realize suggestions of a Python-noob.
 # ------------- ;) --------------
-# If you want to add your own
-# ideas, do that, but please
-# use "I (NAME)" if you write
-# about yourself.
-# Send new versions of this file
-# to me (ToBeFree). I will replace
-# the 
-# freiwuppertal.de/tuxbotfeatures.txt
-# file.
-# -------------------------------
 
 - Characters should be removed from the input. "Hey its cool" should be the same as "Hey, it's cool!".
 -- if this function is not implemented, it will be nearly impossible to "talk" with TuxBot using predefined sentences.
 
-- I (ToBeFree) will add a lot of questions and answers to TuxBot, some funny, some helpful. Here are some examples:
+- ToBeFree will add a lot of questions and answers to TuxBot, some funny, some helpful. Here are some examples:
 -- Q: !help Windows crashed -- A: Use "format c: /x" to get rid of all your problems! :)
 -- Q: !help Python -- A: [some] [helpful] [links] ;)
 -- Q: !wikipedia WHATEVER -- A: [http://en.wikipedia.org/wiki/WHATEVER] :-)
 
 - To be able to add questions and answers, there has to be a relatively easy system I can use to add them.
--- I am a python noob, but I really want to code at least /some/ things in this bot. So I need the possibility
---- to do that easily. ;)
+-- I am a python noob, but I really want to code at least /some/ things in this bot. So I need the possibility to do that easily. ;)
 
 - Do you want to publish TuxBot under a free license?
 -- like GPL?
 -- like CC-by-nc-sa?
-
-- I (ToBeFree) and LinuxUser324 need read+write permissions to the github; also, if I need to create an github-account
--- to be able to write, I will do that.
 
 - TuxBot has a big problem that needs to be solved before he is regularily used in the chat: He listens to everyone.
 -- That means:
