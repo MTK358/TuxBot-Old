@@ -12,7 +12,6 @@ def synopsis(section, name):
     try:
         stream = urllib.urlopen(get(section, name))
         page = stream.read()
-        print page
         match = re.match(r'.*<h2>Synopsis</h2>(.*)<h2>Description</h2>.*', page, flags = re.IGNORECASE | re.DOTALL)
         if not match:
             return None
@@ -28,5 +27,4 @@ def synopsis(section, name):
     finally:
         if stream:
             stream.close()
-
 
