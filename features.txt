@@ -1,9 +1,7 @@
 # IF YOU ARE NOT ABLE TO READ THIS DOCUMENT, IT MAY BE BECAUSE IT IS WRITTEN IN UNICODE, UTF-8.
-# IT MAY ALSO BE BECAUSE LINUX USES SOME OTHER CONTROL-CHARACTERS THAN WINDOWS.
-# THIS DOCUMENT IS BEST VIEWED WITH KATE OR GEDIT UNDER UBUNTU WITH KDE OR GNOME OR UNITY.
+# IT MAY ALSO BE BECAUSE LINUX USES LF NEWLINES INSTEAD OF WINDOWS'S CRLF NEWLINES.
 # I WILL *NOT* CREATE A WINDOWS VERSION OF THIS DOCUMENT.
 # I WILL *NOT* CREATE A NON-UTF VERSION OF THIS DOCUMENT.
-# (You are allowed to copy this header to the top of every document you made using Kate or Gedit. It helps. ;-) )
 #
 # ------------------------------
 # ToBeFree's TuxBot Feature list
@@ -58,6 +56,8 @@
 - Shall we add the github-link to the #linux topic? I (ToBeFree) would like that, but there is a condition:
 -- Only LinuxUser324, me (ToBeFree) and Colson should be allowed to modify the code.
 
+I (LinuxUser324) think that it might be a good idea. Also, someone modifying it is not an issue since GitHub won't let them without my permission.
+
 - Colson needs to tell me (ToBeFree) how to use github xD
 
 - Maybe TuxBot should not only listen to "!command" commands. He should also answer if somebody - for example - says:
@@ -69,11 +69,17 @@
 - Variable-based commands to add:
 -- !time
 -- !date
--- !xkcb (<-- random xkcb comic, if possible)
--- !xkcb-linux (<-- random xkcb comic featuring Linux, Windows, free software, ... - may be hard to implement)
--- !xkcb-geek (<-- random xkcb comic you only understand if you are a really, really big geek/nerd.)
+-- !xkcd (<-- random xkcd comic, if possible)
+-- !xkcd-linux (<-- random xkcd comic featuring Linux, Windows, free software, ... - may be hard to implement)
+
+(LinuxUser324) It's actully not hard to implement, but it means that someone needs to look through all the xkcd comics and find all the Linux-related ones.
+
+-- !xkcd-geek (<-- random xkcd comic you only understand if you are a really, really big geek/nerd.)
 -- !wikipedia-random (<-- random Wikipedia article)
 -- !wikipedia COMMAND (<-- as mentioned above, give out a Wikipedia link.)
 -- !wikipedia-ARGUMENT COMMAND (<-- Output link: "http://ARGUMENT.wikipedia.org/wiki/COMMAND")
 
 ---- As I (ToBeFree) said at the beginning, feel free to add your own ideas, but please use "I (NAME)".
+
+- I (LinuxUser324) think that it might be a good idea to have commands to set things like questions and answers (rather than hard-coding them), and for TuxBot to only accept such commands from ops. This means that TuxBot won't have to be taken offline to change them. If you want it to come with pre-defined answers, how about including a data file pre-filled with them in the GitHub repo?
+

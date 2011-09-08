@@ -1,1 +1,4 @@
-Edit me please!
+The IRC bot for the #Linux channel on EsperNet.
+
+To use a different server, channel, or nick, see the beginning of TuxBot.py. You can also change the path to the data file there.
+
