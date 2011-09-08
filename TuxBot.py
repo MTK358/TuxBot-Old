@@ -169,6 +169,7 @@ joined = False
 def onExit(irc):
     irc.socket.send("QUIT :Python interpreter terminated.\r\n")
     irc.socket.close()
+    print ""
 
 atexit.register(onExit, irc)
 
@@ -182,6 +183,8 @@ sys.excepthook = new_hook
 
 while True:
     line = irc.readline()
+    if line == "":
+        continue
     print line
 
     # respond to PING commands
@@ -201,4 +204,3 @@ while True:
     tmp = irc.is_message(line)
     if tmp and tmp[1] == channel:
         process_line(tmp[2], tmp[0])
-
