@@ -125,9 +125,15 @@ def process_line(line, sender):
 
     else:
 
-        match = re.match(r'.*(i (hate|don\'?t like) tuxbot|tuxbot is (stupid|dumb|useless)).*', line)
+        match = re.match(r'.*(hi|hello|hey)\s+tuxbot', line, re.IGNORECASE)
+        if match:
+            irc.send_message("Hi, %s!" % (sender))
+            return
+
+        match = re.match(r'.*(i (hate|don\'?t like) tuxbot|tuxbot is (stupid|dumb|useless)).*', line, re.IGNORECASE)
         if match:
             irc.send_message("Shut up!")
+            return
 
 irc = IrcClient(server, port, nick, realname)
 joined = False
