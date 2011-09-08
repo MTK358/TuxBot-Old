@@ -48,6 +48,7 @@ class IrcClient:
 
     def quit(self, message = ""):
         self.socket.send("QUIT :%s\r\n" % message)
+        self.socket.close()
 
     def is_message(self, string):
         match = re.match(r':([^!]+)[^\s]+ PRIVMSG ([^\s]+) :(.*)', string)

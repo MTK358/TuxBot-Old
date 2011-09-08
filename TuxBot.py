@@ -15,6 +15,7 @@ port = 6667
 channel = "#Linux"
 nick = "TuxBot"
 realname = "The #Linux Bot, development version"
+quitmessage = "Segmentation fault"
 config = ConfigFile(os.environ["HOME"] + "/tuxbotfile")
 
 commandref='''!help <key> -- get help about <key>
@@ -116,8 +117,7 @@ def process_line(line, sender):
         # !quit -- make TuxBot quit
         match = re.match(r'!quit$', line)
         if match:
-            irc.quit("Segmentation fault")
-            time.sleep(3)
+            irc.quit()
             sys.exit(0)
             return
 
@@ -132,19 +132,11 @@ def process_line(line, sender):
 irc = IrcClient(server, port, nick, realname)
 joined = False
 
-def onExit(irc):
-    irc.socket.send("QUIT :Python interpreter terminated.\r\n")
-    irc.socket.close()
-    print ""
-
-atexit.register(onExit, irc)
-
 old_excepthook = sys.excepthook
 def new_hook(type, value, traceback):
-    if type != exceptions.KeyboardInterrupt:
+    if type == exceptions.KeyboardInterrupt:
+        irc.quit()
         old_excepthook(type, value, traceback)
-    else:
-        pass
 sys.excepthook = new_hook
 
 while True:
