@@ -1,4 +1,5 @@
 from irc import IrcClient
+from configfile import ConfigFile
 import xkcd
 import man
 import re
@@ -14,18 +15,16 @@ port = 6667
 channel = "#Linux"
 nick = "TuxBot"
 realname = "The #Linux Bot, development version"
-datafile = os.environ["HOME"] + "/tuxbotfile"
+config = ConfigFile(os.environ["HOME"] + "/tuxbotfile")
 
 commandref='''!help <key> -- get help about <key>
-!sethelp <key>: <value> -- set what !help shows when given <key>
 !man <section> <name> -- get the URL to an online man page
 !synopsis <section> <name> -- get the SYNOPSIS section of the specified man page
 !man <criteria> -- search for an online man page
 !xkcd -- get a link to a random xkcd comic
 !xkcd <number> -- get the link to the specified xkcd
 !xkcd-linux -- get a random xkcd comic that mentions Linux
-!xkcd-linux add <number> -- add a comic the the list used by "!xkcd-linux"
-(Note: you can use "geek" instead of "linux" in the above two commands for geeky comics)
+(Note: you can use "geek" instead of "linux" in the above command for geeky comics)
 !time -- show the current time
 !time <strftime> -- show the current time, with custom formatting. See "man strftime" for more.
 (Note: you can use "date" instead of "time" in the above two commands)
@@ -37,27 +36,22 @@ def process_line(line, sender):
         return
 
     if line[0] == "!":
-        # !sethelp <key>: <value> -- set what the !help command returns when given a certain key
-        match = re.match(r'!sethelp\s+([^:]+):(.*)$', line)
+
+        # !help -- get help about TuxBot's commads
+        match = re.match(r'!help$', line)
         if match:
-            key = match.group(1)
-            value = match.group(2).strip()
-            save_to_file("help-"+key, value)
-            irc.send_message("Help for \"%s\" is now set to \"%s\"." % (key, value))
+            irc.send_private_notice(commandref, sender)
             return
+
         # !help <key> -- get help
         match = re.match(r'!help\s+(.*)$', line)
         if match:
             key = match.group(1)
-            text = get_from_file("help-"+key)
+            text = config.get_help(key)
             if text:
                 irc.send_message("%s" % (text))
             else:
                 irc.send_message("I don't have an answer for \"%s\". You can set it using the \"!sethelp question: answer\" command." % (key))
-            return
-        match = re.match(r'!help$', line)
-        if match:
-            irc.send_private_notice(commandref, sender)
             return
 
         # !man <section> <name> -- get the URL to an online man page
@@ -80,33 +74,36 @@ def process_line(line, sender):
             irc.send_message(man.search(match.group(1)))
             return
 
+        # !xkcd -- get a random xkcd comic
         match = re.match(r'!xkcd$', line)
         if match:
             irc.send_message(xkcd.get_random())
             return
+        # !xkcd <index> -- get an xkcd comic by index
         match = re.match(r'!xkcd\s+([0-9]+)$', line)
         if match:
             irc.send_message(xkcd.get_url(int(match.group(1))))
             return
+
+        # !xkcd-linux and !xkcd-geek -- get linux-related and geeky xkcd comics
         match = re.match(r'!xkcd-linux$', line)
         if match:
-            l = file_get_all("xkcd-linux")
-            if len(l) == 0:
+            l = config.get_linux_xkcds()
+            if not l:
                 irc.send_message("No linux-related comics in list.")
             else:
                 irc.send_message(xkcd.get_url(int(l[random.randint(0, len(l)-1)])))
             return
-        match = re.match(r'!xkcd-linux\s+add\s+([0-9]+)$', line)
+        match = re.match(r'!xkcd-geek$', line)
         if match:
-            l = save_to_file("xkcd-linux", match.group(1))
-            irc.send_message("Added %s to Linux comics list." % (match.group(1)))
-            return
-        match = re.match(r'!xkcd-geek\s+add\s+([0-9]+)$', line)
-        if match:
-            l = save_to_file("xkcd-geek", match.group(1))
-            irc.send_message("Added %s to geek comics list." % (match.group(1)))
+            l = config.get_geek_xkcds()
+            if not l:
+                irc.send_message("No linux-related comics in list.")
+            else:
+                irc.send_message(xkcd.get_url(int(l[random.randint(0, len(l)-1)])))
             return
 
+        # !time and !date -- get the current time
         match = re.match(r'!(time|date)$', line)
         if match:
             irc.send_message(time.strftime("%A %Y-%m-%d %H:%M:%S %Z"))
@@ -131,37 +128,6 @@ def process_line(line, sender):
         match = re.match(r'.*(i (hate|don\'?t like) tuxbot|tuxbot is (stupid|dumb|useless)).*', line)
         if match:
             irc.send_message("Shut up!")
-
-def get_from_file(key):
-    f = open(datafile, "r")
-    value = None
-    while True:
-        line = f.readline()
-        if len(line) == 0:
-            break
-        if line.find(key + ":") == 0:
-            value = line[len(key)+1:]
-    f.close()
-    return value
-
-def file_get_all(key):
-    f = open(datafile, "r")
-    l = []
-    while True:
-        line = f.readline()
-        if len(line) == 0:
-            break
-        if line.find(key + ":") == 0:
-            l.append(line[len(key)+1:])
-    f.close()
-    return l
-
-def save_to_file(key, value):
-    value.replace("\r", "")
-    value.replace("\n", " ")
-    f = open(datafile, "a")
-    f.write(key + ":" + value + "\n")
-    f.close()
 
 irc = IrcClient(server, port, nick, realname)
 joined = False
