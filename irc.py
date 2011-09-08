@@ -35,6 +35,14 @@ class IrcClient:
             self.socket.send("PRIVMSG "+channel+" :"+line+"\r\n")
             first = False
 
+    def send_private_notice(self, message, nick):
+	first = True
+        for line in message.split("\n"):
+            if not first:
+                time.sleep(0.3)
+            self.socket.send("NOTICE "+nick+" :"+line+"\r\n")
+            first = False
+
     def send_pong(self, message):
         self.socket.send("PONG :%s\r\n" % (message))
 

@@ -55,7 +55,7 @@ def process_line(line, sender):
             return
         match = re.match(r'!help$', line)
         if match:
-            irc.send_message(commandref)
+            irc.send_private_notice(commandref, sender)
             return
 
         # !man <section> <name> -- get the URL to an online man page
