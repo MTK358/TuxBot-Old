@@ -117,7 +117,7 @@ def process_line(line, sender):
         # !quit -- make TuxBot quit
         match = re.match(r'!quit$', line)
         if match:
-            irc.quit()
+            irc.quit(quitmessage)
             sys.exit(0)
             return
 
@@ -135,7 +135,7 @@ joined = False
 old_excepthook = sys.excepthook
 def new_hook(type, value, traceback):
     if type == exceptions.KeyboardInterrupt:
-        irc.quit()
+        irc.quit(quitmessage)
         old_excepthook(type, value, traceback)
 sys.excepthook = new_hook
 
