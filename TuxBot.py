@@ -59,7 +59,7 @@ def process_line(line, sender):
             return
 
         # !man <section> <name> -- get the URL to an online man page
-        match = re.match(r'!man\s+(\w+)\s+(\w+)$', line)
+        match = re.match(r'!man\s+(\w+)\s+([-A-Za-z0-9_]+)$', line)
         if match:
             irc.send_message(man.get(match.group(1), match.group(2)))
             return
@@ -165,27 +165,24 @@ irc = IrcClient(server, port, nick, realname)
 joined = False
 
 while True:
-    # get input from the server
-    string = irc.read()
-    # iterate over the lines individually
-    for line in string.split("\r\n"):
-        print line
+    line = irc.readline()
+    print line
 
-        # respond to PING commands
-        tmp = irc.is_ping(line)
-        if tmp:
-            irc.send_pong(tmp)
-            continue
+    # respond to PING commands
+    tmp = irc.is_ping(line)
+    if tmp:
+        irc.send_pong(tmp)
+        continue
 
-        if not joined and line == ":"+nick+" MODE "+nick+" :+i":
-            irc.join(channel)
-            joined = True
+    if not joined and line == ":"+nick+" MODE "+nick+" :+i":
+        irc.join(channel)
+        joined = True
 
-        if not joined:
-            continue
+    if not joined:
+        continue
 
-        # respond to posts on the channel
-        tmp = irc.is_message(line)
-        if tmp and tmp[1] == channel:
-            process_line(tmp[2], tmp[0])
+    # respond to posts on the channel
+    tmp = irc.is_message(line)
+    if tmp and tmp[1] == channel:
+        process_line(tmp[2], tmp[0])
 

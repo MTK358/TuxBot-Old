@@ -5,7 +5,7 @@ def get(section, name):
     return "http://linux.die.net/man/%s/%s" % (section, name)
 
 def search(name):
-    return "http://www.die.net/search/?q=%s&sa=Search&ie=ISO-8859-1&cx=partner-pub-5823754184406795%%3A54htp1rtx5u&cof=FORID%%3A9&siteurl=linux.die.net%%2F#850" % (name)
+    return "http://duckduckgo.com/?q=site%3Alinux.die.net+" + name
 
 def synopsis(section, name):
     stream = None

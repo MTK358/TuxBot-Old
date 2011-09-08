@@ -11,9 +11,12 @@ class IrcClient:
         self.socket.connect((server, port))
         self.set_nick(nick)
         self.socket.send("USER %s 8 * :%s\r\n" % (nick, realname))
+        self.buf = []
 
-    def read(self):
-        return self.socket.recv(4096)
+    def readline(self):
+        if len(self.buf) == 0:
+            self.buf.extend(self.socket.recv(4096).split("\r\n"))
+        return self.buf.pop()
 
     def set_nick(self, nick):
         self.socket.send("NICK %s\r\n" % (nick))
