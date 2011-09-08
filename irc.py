@@ -36,7 +36,7 @@ class IrcClient:
             first = False
 
     def send_private_notice(self, message, nick):
-	first = True
+        first = True
         for line in message.split("\n"):
             if not first:
                 time.sleep(0.3)
