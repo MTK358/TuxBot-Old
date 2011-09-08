@@ -9,8 +9,9 @@
 "-" = This is not done yet.
 "+" = This has been done.
 
-- Characters should be removed from the input. "Hey its cool" should be the same as "Hey, it's cool!".
+- Non-alphanumeric characters should be removed from the input. "Hey its cool" should be the same as "Hey, it's cool!".
 -- if this function is not implemented, it will be nearly impossible to "talk" with TuxBot using predefined sentences.
+#(LinuxUser324) The problem is that it will make `!sethelp test: This is a "test"` set "test" to "this is a test". And what about man page names and the strftime arguiment to !time?
 
 - ToBeFree will add a lot of questions and answers to TuxBot, some funny, some helpful. Here are some examples:
 -> Q: !help Windows crashed -- A: Use "format c: /x" to get rid of all your problems! :)
@@ -32,7 +33,7 @@
 
 + Shall we add the github-link to the #linux topic? ToBeFree would like that, but there is a condition:
 + Only LinuxUser324, ToBeFree and Colson should be allowed to modify the code.
-# I (LinuxUser324) think that it might be a good idea. Also, someone modifying it is not an issue since GitHub won't let them without my permission.
+#(LinuxUser324) I think that it might be a good idea. Also, someone modifying it is not an issue since GitHub won't let them without my permission.
 
 + Colson needs to tell ToBeFree how to use github xD
 
@@ -72,3 +73,4 @@ And this is the answer! :D
 No, I do not think that ~001~ is~002~stupid.
 # END CONFIGURATION FILE EXAMPLE
 #(ToBeFree) Coding the variables might be really, really hard. But the first things like "hey thats cool" should be relatively easy to implement (I hope). :)
+#(LinuxUser324) What do you mean by "coding the variables"?
