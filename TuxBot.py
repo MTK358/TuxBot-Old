@@ -6,6 +6,8 @@ import sys
 import time
 import random
 import os
+import atexit
+import exceptions
 
 server = "irc.esper.net"
 port = 6667
@@ -163,6 +165,20 @@ def save_to_file(key, value):
 
 irc = IrcClient(server, port, nick, realname)
 joined = False
+
+def onExit(irc):
+    irc.socket.send("QUIT :Python interpreter terminated.\r\n")
+    irc.socket.close()
+
+atexit.register(onExit, irc)
+
+old_excepthook = sys.excepthook
+def new_hook(type, value, traceback):
+    if type != exceptions.KeyboardInterrupt:
+        old_excepthook(type, value, traceback)
+    else:
+        pass
+sys.excepthook = new_hook
 
 while True:
     line = irc.readline()
