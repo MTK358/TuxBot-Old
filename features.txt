@@ -13,7 +13,7 @@
 -- if this function is not implemented, it will be nearly impossible to "talk" with TuxBot using predefined sentences.
 #(LinuxUser324) The problem is that it will make `!sethelp test: This is a "test"` set "test" to "this is a test". And what about man page names and the strftime arguiment to !time?
 
-- ToBeFree will add a lot of questions and answers to TuxBot, some funny, some helpful. Here are some examples:
++ ToBeFree will add a lot of questions and answers to TuxBot, some funny, some helpful. Here are some examples:
 -> Q: !help Windows crashed -- A: Use "format c: /x" to get rid of all your problems! :)
 -> Q: !help Python -- A: [some] [helpful] [links] ;)
 -> Q: !wikipedia WHATEVER -- A: [http://en.wikipedia.org/wiki/WHATEVER] :-)
@@ -52,9 +52,9 @@
 #(ToBeFree) I will do that if there is a way to add this information in the hard code or in a configuration text file that is shipped with the bot.
 
 ++ !xkcd-geek (<-- random xkcd comic you only understand if you are a really, really big geek/nerd.)
--- !wikipedia-random (<-- random Wikipedia article)
--- !wikipedia COMMAND (<-- as mentioned above, give out a Wikipedia link.)
--- !wikipedia-ARGUMENT COMMAND (<-- Output link: "http://ARGUMENT.wikipedia.org/wiki/COMMAND")
+++ !wikipedia-random (<-- random Wikipedia article)
+++ !wikipedia COMMAND (<-- as mentioned above, give out a Wikipedia link.)
+++ !wikipedia-ARGUMENT COMMAND (<-- Output link: "http://ARGUMENT.wikipedia.org/wiki/COMMAND")
 #(ToBeFree) This is to be able to get Wikipedia texts in your own language. :)
 
 ---- Feel free to add your own ideas, but please use "(NAME)" or something like that to show who added the idea.

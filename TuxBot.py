@@ -104,6 +104,27 @@ def process_line(line, sender):
                 irc.send_message(xkcd.get_url(int(l[random.randint(0, len(l)-1)])))
             return
 
+        # !wikipedia -- get a random wikipedia article
+        match = re.match(r'!wikipedia$', line)
+        if match:
+            irc.send_message("http://en.wikipedia.org/wiki/Special:Random")
+            return
+        # !wikipedia <article> -- get a link to wikipedia article
+        match = re.match(r'!wikipedia\s+([^\s].+)$', line)
+        if match:
+            irc.send_message("http://en.wikipedia.org/wiki/Special:Search?search=" + match.group(1).replace(" ", "+"))
+            return
+        # !wikipedia-<lang> -- get a random wikipedia article in a certain language
+        match = re.match(r'!wikipedia-(\w+)$', line)
+        if match:
+            irc.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Random")
+            return
+        # !wikipedia-<lang> <article> -- get a link to wikipedia article in a certain language
+        match = re.match(r'!wikipedia-(\w+)\s+([^\s].+)$', line)
+        if match:
+            irc.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Search?search=" + match.group(2).replace(" ", "+"))
+            return
+
         # !time and !date -- get the current time
         match = re.match(r'!(time|date)$', line)
         if match:
