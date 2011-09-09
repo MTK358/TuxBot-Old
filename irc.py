@@ -14,9 +14,12 @@ class IrcClient:
         self.buf = []
 
     def readline(self):
-        if len(self.buf) == 0:
-            self.buf.extend(self.socket.recv(4096).split("\r\n"))
-        return self.buf.pop()
+        line = ""
+        while True:
+            line += self.socket.recv(1)
+            if len(line) >= 2 and line[-2:] == "\r\n":
+                break
+        return line.strip()
 
     def set_nick(self, nick):
         self.socket.send("NICK %s\r\n" % (nick))
