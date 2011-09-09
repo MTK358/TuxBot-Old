@@ -15,11 +15,14 @@ class IrcClient:
 
     def readline(self):
         line = ""
-        while True:
-            line += self.socket.recv(1)
-            if len(line) >= 2 and line[-2:] == "\r\n":
-                break
-        return line.strip()
+        try:
+            while True:
+                line += self.socket.recv(1)
+                if len(line) >= 2 and line[-2:] == "\r\n":
+                    break
+            return line.strip()
+        except KeyboardInterrupt:
+            pass
 
     def set_nick(self, nick):
         self.socket.send("NICK %s\r\n" % (nick))
