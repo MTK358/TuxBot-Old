@@ -7,7 +7,6 @@ import sys
 import time
 import random
 import os
-import atexit
 import exceptions
 
 server = "irc.esper.net"
