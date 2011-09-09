@@ -33,7 +33,6 @@ commandref='''!help <key> -- get help about <key>
 def clean_string(string):
     s = re.sub("[^-_\w\s]", "", string.lower())
     s = re.sub("\s+", " ", s)
-    print "Cleaned String: " + s
     return s
 
 def process_message(line, sender):
