@@ -7,7 +7,6 @@ import sys
 import time
 import random
 import os
-import atexit
 import exceptions
 
 server = "irc.esper.net"
@@ -31,7 +30,7 @@ commandref='''!help <key> -- get help about <key>
 (Note: you can use "date" instead of "time" in the above two commands)
 !quit -- make TuxBot quit'''
 
-def process_line(line, sender):
+def process_message(line, sender):
     line = line.strip()
     if len(line) == 0:
         return
@@ -156,6 +155,54 @@ def process_line(line, sender):
             irc.send_message("Shut up!")
             return
 
+channel_ops = []
+channel_voices = []
+
+def process_mode(modeset):
+    if modeset.mode is "o" and modeset.given:
+        channel_ops.append(modeset.nick)
+    elif modeset.mode is "o" and not modeset.given:
+        channel_ops.remove(modeset.nick)
+    elif modeset.mode is "v" and modeset.given:
+        channel_voices.append(modeset.nick)
+    elif modeset.mode is "v" and not modeset.given:
+        channel_voices.remove(modeset.nick)
+    #print modeset
+    #setter, to, mode, given[, nick]
+
+def process_kick(kicker, channel, nick, comment):
+    try:
+        channel_ops.remove(nick)
+    except Error:
+        pass
+
+    try:
+        channel_voices.remove(nick)
+    except Error:
+        pass
+
+def process_quit(nick, comment):
+    try:
+        channel_ops.remove(nick)
+    except Error:
+        pass
+
+    try:
+        channel_voices.remove(nick)
+    except Error:
+        pass
+
+def process_part(nick, channel):
+    try:
+        channel_ops.remove(nick)
+    except Error:
+        pass
+
+    try:
+        channel_voices.remove(nick)
+    except Error:
+        pass
+
 irc = IrcClient(server, port, nick, realname)
 joined = False
 
@@ -188,4 +235,22 @@ while True:
     # respond to posts on the channel
     tmp = irc.is_message(line)
     if tmp and tmp[1] == channel:
-        process_line(tmp[2], tmp[0])
+        process_message(tmp[2], tmp[0])
+        
+    tmp = irc.is_quit(line)
+    if tmp is not None:
+        process_quit(tmp[0], tmp[1])
+
+    tmp = irc.is_kick(line)
+    if tmp is not None:
+        process_kick(tmp[0], tmp[1], tmp[2], tmp[3])
+
+    tmp = irc.is_part(line)
+    if tmp is not None:
+        for channel in tmp[1]:
+            process_part(tmp[0], channel)
+
+    tmp = irc.is_mode(line)
+    if tmp is not None:
+        for i in tmp:
+            process_mode(i)

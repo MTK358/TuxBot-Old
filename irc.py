@@ -14,9 +14,12 @@ class IrcClient:
         self.buf = []
 
     def readline(self):
-        if len(self.buf) == 0:
-            self.buf.extend(self.socket.recv(4096).split("\r\n"))
-        return self.buf.pop()
+        line = ""
+        while True:
+            line += self.socket.recv(1)
+            if len(line) >= 2 and line[-2:] == "\r\n":
+                break
+        return line.strip()
 
     def set_nick(self, nick):
         self.socket.send("NICK %s\r\n" % (nick))
@@ -62,3 +65,61 @@ class IrcClient:
             return match.group(1)
         return None
 
+    def is_quit(self, string):
+        match = re.match(r':([^!]+)[^\s]+ QUIT( :(.*)|)', string)
+        if match:
+            return match.group(1), match.group(3)
+        return None
+
+    def is_kick(self, string):
+        match = re.match(r':([^!]+)[^\s]+ KICK ([^\s]+) ([^\s]+)( (.*)|)', string)
+        if match:
+            return match.group(1), match.group(2), match.group(3), match.group(5)
+        return None
+
+    def is_part(self, string):
+        match = re.match(r':([^!]+)[^\s]+ PART (.*)', string)
+        if match:
+            channels = []
+            for channel in match.group(2).split(","):
+                channels.append(channel)
+            return match.group(1), channels
+        return None
+
+    def is_mode(self, string):
+        match = re.match(r':([^!]+)[^\s]+ MODE ([^\s]+) (.*)', string)
+        if match:
+            setter = match.group(1)
+            to = match.group(2)
+            data = match.group(3)
+            if "+" in data:
+                index = data.find("+")
+            elif "-" in data:
+                index = data.find("-")
+            else:
+                index = data.find("+")
+            index = data[index:].find(" ")
+            nicks = data[index + 1:].split(" ")
+            modes = data[:index]
+            nickindex = 0
+            give = None
+            out = []
+            for i in modes:
+                if i is "+":
+                    give = True
+                elif i is "-":
+                    give = False
+                elif i in ["o", "v"] and give is not None:
+                    out.append(ModeSet(setter, to, i, give, nicks[nickindex]))
+                    nickindex += 1
+            return out
+        return None
+
+class ModeSet:
+    def __init__(self, setter, to, mode, given, nick = None):
+        self.setter = setter
+        self.to = to
+        self.mode = mode
+        self.given = given
+        if nick is not None:
+            self.nick = nick
