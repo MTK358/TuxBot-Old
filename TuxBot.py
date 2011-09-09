@@ -144,8 +144,11 @@ def process_message(line, sender):
         irc.send_message("Invalid command.")
 
     else:
-
-        match = re.match(r'.*(hi|hello|hey)\s+tuxbot', line, re.IGNORECASE)
+        tmpline = ""
+        for i in line:
+            if i in "abcdefghijlklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890":
+                tmpline += i
+        match = re.match(r'.*(hi|hello|hey)\s+tuxbot', tmpline, re.IGNORECASE)
         if match:
             irc.send_message("Hi, %s!" % (sender))
             return
