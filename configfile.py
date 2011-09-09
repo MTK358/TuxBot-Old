@@ -12,6 +12,15 @@ and the answer can contain backreferences. For example:
 
     help-re example([0-9]+)  Number: \1
 
+You can also set pre-defined responses when someone says something:
+
+    on-message number ([0-9]+)  Number: \1
+
+help, help-re, and on-message can all randomly choose from a list of
+responses separated by double spaces:
+
+    on-message example  response 1  response 2  response 3
+
 You can also add comics to the list that !xkcd-linux and !xkcd-geek pick
 randomly from:
 
@@ -27,11 +36,33 @@ possible future changes:
     # this line is ignored by the config file parser
 '''
 import re
+import random
 
 class ConfigFile:
     
     def __init__(self, path):
         self.path = path
+
+    def get_response(self, key):
+        f = None
+        try:
+            f = open(self.path, "r")
+            while True:
+                line = f.readline()
+                if len(line) == 0:
+                    break
+                match = re.match("on-message (.+?)  (.+)$", line)
+                if match:
+                    pattern = match.group(1)
+                    if re.match(pattern+"$", key):
+                        replacement = match.group(2).split("  ")
+                        replacement = replacement[random.randint(0, len(replacement) - 1)]
+                        return re.sub(pattern, replacement, key)
+        except:
+            return None
+        finally:
+            if f:
+                f.close()
 
     def get_help(self, key):
         escaped_key = re.escape(key)

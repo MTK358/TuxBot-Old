@@ -9,16 +9,15 @@
 "-" = This is not done yet.
 "+" = This has been done.
 
-- Non-alphanumeric characters should be removed from the input. "Hey its cool" should be the same as "Hey, it's cool!".
--- if this function is not implemented, it will be nearly impossible to "talk" with TuxBot using predefined sentences.
-#(LinuxUser324) The problem is that it will make `!sethelp test: This is a "test"` set "test" to "this is a test". And what about man page names and the strftime arguiment to !time?
++ Non-alphanumeric characters should be removed from the input. "Hey its cool" should be the same as "Hey, it's cool!".
+++ if this function is not implemented, it will be nearly impossible to "talk" with TuxBot using predefined sentences.
 
 + ToBeFree will add a lot of questions and answers to TuxBot, some funny, some helpful. Here are some examples:
 -> Q: !help Windows crashed -- A: Use "format c: /x" to get rid of all your problems! :)
 -> Q: !help Python -- A: [some] [helpful] [links] ;)
 -> Q: !wikipedia WHATEVER -- A: [http://en.wikipedia.org/wiki/WHATEVER] :-)
 
-- To be able to add questions and answers, there has to be a relatively easy system ToBeFree can use to add them.
++ To be able to add questions and answers, there has to be a relatively easy system ToBeFree can use to add them.
 -> ToBeFree is not good at coding python, but he really wants to code at least /some/ things in this bot. So he needs the possibility to do that easily. ;)
 
 - Do you want to publish TuxBot under a free license?

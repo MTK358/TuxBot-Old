@@ -30,6 +30,12 @@ commandref='''!help <key> -- get help about <key>
 (Note: you can use "date" instead of "time" in the above two commands)
 !quit -- make TuxBot quit'''
 
+def clean_string(string):
+    s = re.sub("[^-_\w\s]", "", string.lower())
+    s = re.sub("\s+", " ", s)
+    print "Cleaned String: " + s
+    return s
+
 def process_message(line, sender):
     line = line.strip()
     if len(line) == 0:
@@ -46,7 +52,7 @@ def process_message(line, sender):
         # !help <key> -- get help
         match = re.match(r'!help\s+(.*)$', line)
         if match:
-            key = match.group(1)
+            key = clean_string(match.group(1))
             text = config.get_help(key)
             if text:
                 irc.send_message("%s" % (text))
@@ -111,7 +117,7 @@ def process_message(line, sender):
         # !wikipedia <article> -- get a link to wikipedia article
         match = re.match(r'!wikipedia\s+([^\s].+)$', line)
         if match:
-            irc.send_message("http://en.wikipedia.org/wiki/Special:Search?search=" + match.group(1).replace(" ", "+"))
+            irc.send_message("http://en.wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(1)).replace(" ", "+"))
             return
         # !wikipedia-<lang> -- get a random wikipedia article in a certain language
         match = re.match(r'!wikipedia-(\w+)$', line)
@@ -121,7 +127,7 @@ def process_message(line, sender):
         # !wikipedia-<lang> <article> -- get a link to wikipedia article in a certain language
         match = re.match(r'!wikipedia-(\w+)\s+([^\s].+)$', line)
         if match:
-            irc.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Search?search=" + match.group(2).replace(" ", "+"))
+            irc.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(2)).replace(" ", "+"))
             return
 
         # !time and !date -- get the current time
@@ -145,14 +151,9 @@ def process_message(line, sender):
 
     else:
 
-        match = re.match(r'.*(hi|hello|hey)\s+tuxbot', line, re.IGNORECASE)
-        if match:
-            irc.send_message("Hi, %s!" % (sender))
-            return
-
-        match = re.match(r'.*(i (hate|don\'?t like) tuxbot|tuxbot is (stupid|dumb|useless)).*', line, re.IGNORECASE)
-        if match:
-            irc.send_message("Shut up!")
+        response = config.get_response(clean_string(line))
+        if response:
+            irc.send_message(response.replace("\\s", sender))
             return
 
 channel_ops = []
@@ -206,12 +207,14 @@ def process_part(nick, channel):
 irc = IrcClient(server, port, nick, realname)
 joined = False
 
-old_excepthook = sys.excepthook
+# I temporarily removed this becuase it makes it so that exceptions caused by
+# bugs aren't shown.
+'''old_excepthook = sys.excepthook
 def new_hook(type, value, traceback):
     if type == exceptions.KeyboardInterrupt:
         irc.quit(quitmessage)
         old_excepthook(type, value, traceback)
-sys.excepthook = new_hook
+sys.excepthook = new_hook'''
 
 while True:
     line = irc.readline()
