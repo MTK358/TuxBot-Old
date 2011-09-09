@@ -218,7 +218,7 @@ sys.excepthook = new_hook'''
 
 while True:
     line = irc.readline()
-    if line == "":
+    if line is "" or line is None:
         continue
     print line
 

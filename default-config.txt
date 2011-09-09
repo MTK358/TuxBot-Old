@@ -1,0 +1,3 @@
+on-message .*(hi|hello|hey)\s+tuxbot  Hi, \s!
+on-message .*(i (hate|don\'?t like) tuxbot|tuxbot is (stupid|dumb|useless)).*  Shut up!
+
