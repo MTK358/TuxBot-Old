@@ -146,7 +146,7 @@ def process_message(line, sender):
     else:
         tmpline = ""
         for i in line:
-            if i in "abcdefghijlklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890":
+            if i in "abcdefghijlklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ":
                 tmpline += i
         match = re.match(r'.*(hi|hello|hey)\s+tuxbot', tmpline, re.IGNORECASE)
         if match:
