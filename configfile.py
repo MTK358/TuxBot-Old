@@ -16,10 +16,13 @@ You can also set pre-defined responses when someone says something:
 
     on-message number ([0-9]+)  Number: \1
 
-help, help-re, and on-message can all randomly choose from a list of
-responses separated by double spaces:
+on-message can randomly choose from a list of responses separated by double
+spaces:
 
     on-message example  response 1  response 2  response 3
+
+It also replaces "\s" in the responses with the nick of the person who wrote
+the message.
 
 You can also add comics to the list that !xkcd-linux and !xkcd-geek pick
 randomly from:
