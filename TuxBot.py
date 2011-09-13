@@ -1,3 +1,20 @@
+# TuxBot, the #linux bot. Development version.
+#   Copyright (C) 2011 Colson, LinuxUser324, Krenair and Tobias "ToBeFree" Frei.
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see http://www.gnu.org/licenses/gpl-3.0.html .
+
+
 from irc import IrcClient
 from configfile import ConfigFile
 import xkcd
@@ -28,6 +45,7 @@ commandref='''!help <key> -- get help about <key>
 !time -- show the current time
 !time <strftime> -- show the current time, with custom formatting. See "man strftime" for more.
 (Note: you can use "date" instead of "time" in the above two commands)
+!license or !credits or !authors -- view the license information and the names of the people who made TuxBot.
 !quit -- make TuxBot quit'''
 
 def clean_string(string):
@@ -138,6 +156,25 @@ def process_message(line, sender):
         if match:
             irc.send_message(time.strftime(match.group(2)))
             return
+        # !license or !authors or !credits -- display license information and the names of the people who made TuxBot
+        match = re.match(r'!credits$', line)
+        secondmatch = re.match(r'!authors$', line)
+        thirdmatch = re.match(r'!license$', line)
+        if match or secondmatch or thirdmatch:
+            irc.send_message("Copyright (C) 2011 Colson, LinuxUser324, Krenair and Tobias \"ToBeFree\" Frei.")
+            irc.send_message("This program is free software: you can redistribute it and/or modify")
+            irc.send_message("it under the terms of the GNU General Public License as published by")
+            irc.send_message("the Free Software Foundation, either version 3 of the License, or")
+            irc.send_message("(at your option) any later version.")
+            irc.send_message("---")
+            irc.send_message("This program is distributed in the hope that it will be useful,")
+            irc.send_message(" but WITHOUT ANY WARRANTY; without even the implied warranty of")
+            irc.send_message("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the")
+            irc.send_message("GNU General Public License for more details.")
+            irc.send_message("---")
+            irc.send_message("http://www.gnu.org/licenses/gpl-3.0.html")
+            return
+
 
         # !quit -- make TuxBot quit
         match = re.match(r'!quit$', line)
