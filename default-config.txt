@@ -1,4 +1,9 @@
-#Currently being edited by ToBeFree, please DO NOT CHANGE.
-on-message .*(hi|hello|hey)\s+tuxbot  Hi, \s!
-on-message .*(i (hate|don\'?t like) tuxbot|tuxbot is (stupid|dumb|useless)).*  Shut up!
+on-message .*(hi|hello|hey|good (morning|afternoon|evening|night))\s+tuxbot  Hi, \s! # Need help here. I want him to answer "good night, USER" to "good night, TuxBot" instead of answering "Hi" to "good night".
+on-message .*(i (hate|dont like) tuxbot|tuxbot is (stupid|dumb|useless)).*  Shut up!  Really? :(  Why?  You do not have to like me =P  You must be kidding! O.O
+# Removed the regex from the "don't" because all non-alphanumeric characters are filtered out now.
+on-message .*windows is .* better than .*  Windows is just stupid. ;)
+on-message (.*format .*(drive|hdd|disk).*)&&(.*linux.*)  NOT IMPLEMENTED YET. If this is finished, it will tell you how to format your hard disk (or whatever) using Linux. ;)
+# Please correct me if the command above is coded wrong. :)
+on-message .*tuxbot 
 
+#ToBeFree is STILL EDITING THIS FILE!!
