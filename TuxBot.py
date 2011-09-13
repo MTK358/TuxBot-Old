@@ -174,7 +174,7 @@ def process_message(line, sender):
             irc.send_message("---")
             irc.send_message("http://www.gnu.org/licenses/gpl-3.0.html")
             return
-            # Wow, code actually written by ToBeFree - now let's hope it works xD
+
 
         # !quit -- make TuxBot quit
         match = re.match(r'!quit$', line)
