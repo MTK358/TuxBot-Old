@@ -32,6 +32,7 @@ channel = "#Linux"
 nick = "TuxBot"
 realname = "The #Linux Bot, development version"
 quitmessage = "Segmentation fault"
+command_prefixes = ["!", re.escape(nick) + r' *, *']
 config = ConfigFile(os.environ["HOME"] + "/tuxbotfile")
 
 commandref='''!help <key> -- get help about <key>
@@ -53,144 +54,139 @@ def clean_string(string):
     s = re.sub("\s+", " ", s)
     return s
 
+def process_command(line, sender):
+    # !help -- get help about TuxBot's commads
+    match = re.match(r'help$', line)
+    if match:
+        irc.send_private_notice(commandref, sender)
+        return True
+
+    # !help <key> -- get help
+    match = re.match(r'help\s+(.*)$', line)
+    if match:
+        key = clean_string(match.group(1))
+        text = config.get_help(key)
+        if text:
+            irc.send_message("%s" % (text))
+        else:
+            irc.send_message("I don't have an answer for \"%s\". You can set it using the \"!sethelp question: answer\" command." % (key))
+        return True
+
+    # !man <section> <name> -- get the URL to an online man page
+    match = re.match(r'man\s+(\w+)\s+([-A-Za-z0-9_]+)$', line)
+    if match:
+        irc.send_message(man.get(match.group(1), match.group(2)))
+        return True
+    # !synopsis <section> <name> -- print the "SYNOPSIS" section of the specified man page
+    match = re.match(r'synopsis\s+(\w+)\s+(\w+)$', line)
+    if match:
+        text = man.synopsis(match.group(1), match.group(2))
+        if not text:
+            irc.send_message("Failed to get man page for \"%s\" in section \"%s\"" % (match.group(2), match.group(1)))
+            return True
+        irc.send_message(text)
+        return True
+    # !man <criteria> -- search for an online man page
+    match = re.match(r'man\s+(\w+)$', line)
+    if match:
+        irc.send_message(man.search(match.group(1)))
+        return True
+
+    # !xkcd -- get a random xkcd comic
+    match = re.match(r'xkcd$', line)
+    if match:
+        irc.send_message(xkcd.get_random())
+        return True
+    # !xkcd <index> -- get an xkcd comic by index
+    match = re.match(r'xkcd\s+([0-9]+)$', line)
+    if match:
+        irc.send_message(xkcd.get_url(int(match.group(1))))
+        return True
+
+    # !xkcd-linux and !xkcd-geek -- get linux-related and geeky xkcd comics
+    match = re.match(r'xkcd-linux$', line)
+    if match:
+        l = config.get_linux_xkcds()
+        if not l:
+            irc.send_message("No linux-related comics in list.")
+        else:
+            irc.send_message(xkcd.get_url(int(l[random.randint(0, len(l)-1)])))
+        return True
+    match = re.match(r'xkcd-geek$', line)
+    if match:
+        l = config.get_geek_xkcds()
+        if not l:
+            irc.send_message("No linux-related comics in list.")
+        else:
+            irc.send_message(xkcd.get_url(int(l[random.randint(0, len(l)-1)])))
+        return True
+
+    # !wikipedia -- get a random wikipedia article
+    match = re.match(r'wikipedia$', line)
+    if match:
+        irc.send_message("http://en.wikipedia.org/wiki/Special:Random")
+        return True
+    # !wikipedia <article> -- get a link to wikipedia article
+    match = re.match(r'wikipedia\s+([^\s].+)$', line)
+    if match:
+        irc.send_message("http://en.wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(1)).replace(" ", "+"))
+        return True
+    # !wikipedia-<lang> -- get a random wikipedia article in a certain language
+    match = re.match(r'wikipedia-(\w+)$', line)
+    if match:
+        irc.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Random")
+        return True
+    # !wikipedia-<lang> <article> -- get a link to wikipedia article in a certain language
+    match = re.match(r'wikipedia-(\w+)\s+([^\s].+)$', line)
+    if match:
+        irc.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(2)).replace(" ", "+"))
+        return True
+
+    # !time and !date -- get the current time
+    match = re.match(r'(time|date)$', line)
+    if match:
+        irc.send_message(time.strftime("%A %Y-%m-%d %H:%M:%S %Z"))
+        return True
+    match = re.match(r'(time|date)\s+([^\s].*)$', line)
+    if match:
+        irc.send_message(time.strftime(match.group(2)))
+        return True
+
+    # !license or !authors or !credits -- display license information and the names of the people who made TuxBot
+    match = re.match(r'credits|authors|license$', line)
+    if match:
+        irc.send_message('''Copyright (C) 2011 Colson, LinuxUser324, Krenair and Tobias "ToBeFree" Frei.
+        This program is free software: you can redistribute it and/or modify
+        it under the terms of the GNU General Public License as published by
+        the Free Software Foundation, either version 3 of the License, or
+        (at your option) any later version.
+        ---
+        This program is distributed in the hope that it will be useful,
+         but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU General Public License for more details.
+        ---
+        http://www.gnu.org/licenses/gpl-3.0.html''')
+        return True
+
+    # !quit -- make TuxBot quit
+    match = re.match(r'quit$', line)
+    if match:
+        irc.quit(quitmessage)
+        sys.exit(0)
+        return True
+
+    return False
+
 def process_message(line, sender):
     line = line.strip()
-    if len(line) == 0:
+    for command_prefix in command_prefixes:
+        if re.match(command_prefix, line) and process_command(line[len(command_prefix):], sender):
+            return
+    response = config.get_response(clean_string(line))
+    if response:
+        irc.send_message(response.replace("\\s", sender))
         return
-
-    if line[0] == "!":
-
-        # !help -- get help about TuxBot's commads
-        match = re.match(r'!help$', line)
-        if match:
-            irc.send_private_notice(commandref, sender)
-            return
-
-        # !help <key> -- get help
-        match = re.match(r'!help\s+(.*)$', line)
-        if match:
-            key = clean_string(match.group(1))
-            text = config.get_help(key)
-            if text:
-                irc.send_message("%s" % (text))
-            else:
-                irc.send_message("I don't have an answer for \"%s\". You can set it using the \"!sethelp question: answer\" command." % (key))
-            return
-
-        # !man <section> <name> -- get the URL to an online man page
-        match = re.match(r'!man\s+(\w+)\s+([-A-Za-z0-9_]+)$', line)
-        if match:
-            irc.send_message(man.get(match.group(1), match.group(2)))
-            return
-        # !synopsis <section> <name> -- print the "SYNOPSIS" section of the specified man page
-        match = re.match(r'!synopsis\s+(\w+)\s+(\w+)$', line)
-        if match:
-            text = man.synopsis(match.group(1), match.group(2))
-            if not text:
-                irc.send_message("Failed to get man page for \"%s\" in section \"%s\"" % (match.group(2), match.group(1)))
-                return
-            irc.send_message(text)
-            return
-        # !man <criteria> -- search for an online man page
-        match = re.match(r'!man\s+(\w+)$', line)
-        if match:
-            irc.send_message(man.search(match.group(1)))
-            return
-
-        # !xkcd -- get a random xkcd comic
-        match = re.match(r'!xkcd$', line)
-        if match:
-            irc.send_message(xkcd.get_random())
-            return
-        # !xkcd <index> -- get an xkcd comic by index
-        match = re.match(r'!xkcd\s+([0-9]+)$', line)
-        if match:
-            irc.send_message(xkcd.get_url(int(match.group(1))))
-            return
-
-        # !xkcd-linux and !xkcd-geek -- get linux-related and geeky xkcd comics
-        match = re.match(r'!xkcd-linux$', line)
-        if match:
-            l = config.get_linux_xkcds()
-            if not l:
-                irc.send_message("No linux-related comics in list.")
-            else:
-                irc.send_message(xkcd.get_url(int(l[random.randint(0, len(l)-1)])))
-            return
-        match = re.match(r'!xkcd-geek$', line)
-        if match:
-            l = config.get_geek_xkcds()
-            if not l:
-                irc.send_message("No linux-related comics in list.")
-            else:
-                irc.send_message(xkcd.get_url(int(l[random.randint(0, len(l)-1)])))
-            return
-
-        # !wikipedia -- get a random wikipedia article
-        match = re.match(r'!wikipedia$', line)
-        if match:
-            irc.send_message("http://en.wikipedia.org/wiki/Special:Random")
-            return
-        # !wikipedia <article> -- get a link to wikipedia article
-        match = re.match(r'!wikipedia\s+([^\s].+)$', line)
-        if match:
-            irc.send_message("http://en.wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(1)).replace(" ", "+"))
-            return
-        # !wikipedia-<lang> -- get a random wikipedia article in a certain language
-        match = re.match(r'!wikipedia-(\w+)$', line)
-        if match:
-            irc.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Random")
-            return
-        # !wikipedia-<lang> <article> -- get a link to wikipedia article in a certain language
-        match = re.match(r'!wikipedia-(\w+)\s+([^\s].+)$', line)
-        if match:
-            irc.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(2)).replace(" ", "+"))
-            return
-
-        # !time and !date -- get the current time
-        match = re.match(r'!(time|date)$', line)
-        if match:
-            irc.send_message(time.strftime("%A %Y-%m-%d %H:%M:%S %Z"))
-            return
-        match = re.match(r'!(time|date)\s+([^\s].*)$', line)
-        if match:
-            irc.send_message(time.strftime(match.group(2)))
-            return
-        # !license or !authors or !credits -- display license information and the names of the people who made TuxBot
-        match = re.match(r'!credits$', line)
-        secondmatch = re.match(r'!authors$', line)
-        thirdmatch = re.match(r'!license$', line)
-        if match or secondmatch or thirdmatch:
-            irc.send_message("Copyright (C) 2011 Colson, LinuxUser324, Krenair and Tobias \"ToBeFree\" Frei.")
-            irc.send_message("This program is free software: you can redistribute it and/or modify")
-            irc.send_message("it under the terms of the GNU General Public License as published by")
-            irc.send_message("the Free Software Foundation, either version 3 of the License, or")
-            irc.send_message("(at your option) any later version.")
-            irc.send_message("---")
-            irc.send_message("This program is distributed in the hope that it will be useful,")
-            irc.send_message(" but WITHOUT ANY WARRANTY; without even the implied warranty of")
-            irc.send_message("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the")
-            irc.send_message("GNU General Public License for more details.")
-            irc.send_message("---")
-            irc.send_message("http://www.gnu.org/licenses/gpl-3.0.html")
-            return
-
-
-        # !quit -- make TuxBot quit
-        match = re.match(r'!quit$', line)
-        if match:
-            irc.quit(quitmessage)
-            sys.exit(0)
-            return
-
-        irc.send_message("Invalid command.")
-
-    else:
-
-        response = config.get_response(clean_string(line))
-        if response:
-            irc.send_message(response.replace("\\s", sender))
-            return
 
 channel_ops = []
 channel_voices = []
