@@ -1,7 +1,5 @@
 The IRC bot for the #Linux channel on EsperNet.
 
-To use a different server, channel, or nick, see the beginning of TuxBot.py. You can also change the path to the data file there.
-
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or

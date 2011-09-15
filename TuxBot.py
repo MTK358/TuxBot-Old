@@ -26,14 +26,35 @@ import random
 import os
 import exceptions
 
-server = "irc.esper.net"
-port = 6667
-channel = "#Linux"
-nick = "TuxBot"
-realname = "The #Linux Bot, development version"
-quitmessage = "Segmentation fault"
-command_prefixes = ["!", re.escape(nick) + r' *, *']
-config = ConfigFile(os.environ["HOME"] + "/tuxbotfile")
+if len(sys.argv) != 2:
+    print "Usage: " + sys.argv[0] + " path/to/config/file"
+    sys.exit(1)
+config = ConfigFile(sys.argv[1])
+
+server, port = config.get_server()
+if not server:
+    print "Config file has no server entry"
+    sys.exit(1)
+channel = config.get_channel()
+if not channel:
+    print "Config file has no channel entry"
+    sys.exit(1)
+nick = config.get_nick()
+if not nick:
+    print "Config file has no nick entry"
+    sys.exit(1)
+realname = config.get_realname()
+if not realname:
+    print "Config file has no realname entry"
+    sys.exit(1)
+quitmessage = config.get_quitmessage()
+if not quitmessage:
+    print "Config file has no quitmessage entry"
+    sys.exit(1)
+command_prefixes = config.get_command_prefixes()
+if not command_prefixes:
+    print "Config file has no command-prefixes entry"
+    sys.exit(1)
 
 commandref='''!help <key> -- get help about <key>
 !man <section> <name> -- get the URL to an online man page

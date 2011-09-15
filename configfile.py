@@ -17,6 +17,17 @@
 '''
 Config File Syntax:
 
+You can configure which server, channel, nick, real name, quit message, and
+command prefixes TuxBot uses. You can have multiple command prefixes
+separated by double spaces:
+
+    nick TuxBot
+    realname The #Linux Bot
+    channel #Linux
+    server irc.esper.net 6667
+    command-prefixes !  TuxBot *, *
+    quitmessage Segmentation fault
+
 Help lines define answers to questions asked using the !help command. They
 consist of the word "help", followed by a space, the question, two spaces,
 and then the answer. Here's an example:
@@ -61,6 +72,119 @@ class ConfigFile:
     
     def __init__(self, path):
         self.path = path
+
+    def get_nick(self):
+        f = None
+        try:
+            f = open(self.path, "r")
+            while True:
+                line = f.readline()
+                if len(line) == 0:
+                    break
+                match = re.match("nick (.+)$", line)
+                if match:
+                    return match.group(1)
+            return l
+        except:
+            pass
+        finally:
+            if f:
+                f.close()
+        return None
+
+    def get_realname(self):
+        f = None
+        try:
+            f = open(self.path, "r")
+            while True:
+                line = f.readline()
+                if len(line) == 0:
+                    break
+                match = re.match("realname (.+)$", line)
+                if match:
+                    return match.group(1)
+            return l
+        except:
+            pass
+        finally:
+            if f:
+                f.close()
+        return None
+
+    def get_quitmessage(self):
+        f = None
+        try:
+            f = open(self.path, "r")
+            while True:
+                line = f.readline()
+                if len(line) == 0:
+                    break
+                match = re.match("quitmessage (.+)$", line)
+                if match:
+                    return match.group(1)
+            return l
+        except:
+            pass
+        finally:
+            if f:
+                f.close()
+        return None
+
+    def get_channel(self):
+        f = None
+        try:
+            f = open(self.path, "r")
+            while True:
+                line = f.readline()
+                if len(line) == 0:
+                    break
+                match = re.match("channel (.+)$", line)
+                if match:
+                    return match.group(1)
+            return l
+        except:
+            pass
+        finally:
+            if f:
+                f.close()
+        return None
+
+    def get_server(self):
+        f = None
+        try:
+            f = open(self.path, "r")
+            while True:
+                line = f.readline()
+                if len(line) == 0:
+                    break
+                match = re.match("server (.+) (.+)$", line)
+                if match:
+                    return match.group(1), int(match.group(2))
+            return l
+        except:
+            pass
+        finally:
+            if f:
+                f.close()
+        return None
+
+    def get_command_prefixes(self):
+        f = None
+        try:
+            f = open(self.path, "r")
+            while True:
+                line = f.readline()
+                if len(line) == 0:
+                    break
+                match = re.match("command-prefixes (.+)$", line)
+                if match:
+                    return match.group(1).split("  ");
+        except:
+            pass
+        finally:
+            if f:
+                f.close()
+        return None
 
     def get_response(self, key):
         f = None
