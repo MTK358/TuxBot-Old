@@ -9,7 +9,8 @@ on-message .*(hi|hello|hey|good (morning|afternoon|evening|night))\s+tuxbot  \1 
 on-message .*(i (hate|dont like) tuxbot|tuxbot is (stupid|dumb|useless)).*  Shut up!  Really? :(  Why?  You do not have to like me =P  You must be kidding! O.O
 on-message .*windows is.*better than.*  Windows is just stupid. ;)
 on-message !yesno .*  Yes.  No.  Yes, absolutely. :D  No, not really. ;)  Yes, why not?  No!!! O.O  Maybe...  I don't know. :/  Well, what do /you/ think?!  I am not authorized to answer to a question like this.
-on-message .*i wish you cold winds.*  May the ice bring you wisdom. :) #play FreeDroidRPG to understand this
+on-message .*i wish you cold winds.*  May the ice bring you wisdom. :) 
+# ^play FreeDroidRPG to understand this^
 on-message !tuxgames  Games featuring Tux in the Ubuntu or PlayDeb repository: - ExtremeTuxRacer: Race down hills with Tux in 3D, using OpenGL. Needs a good graphics card. - FreeDroidRPG: A RPG about Tux saving the world from hostile robots. You can "hack" or just fight the robots. - If you know more games, please tell one of the TuxBot developers about them.
 # on-message .*need help with .*  [do-command] !help \2  |<-- not working yet
 
