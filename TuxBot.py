@@ -213,48 +213,51 @@ channel_ops = []
 channel_voices = []
 
 def process_mode(modeset):
-    if modeset.mode is "o" and modeset.given:
-        channel_ops.append(modeset.nick)
-    elif modeset.mode is "o" and not modeset.given:
-        channel_ops.remove(modeset.nick)
-    elif modeset.mode is "v" and modeset.given:
-        channel_voices.append(modeset.nick)
-    elif modeset.mode is "v" and not modeset.given:
-        channel_voices.remove(modeset.nick)
+    try:
+        if modeset.mode is "o" and modeset.given:
+            channel_ops.append(modeset.nick)
+        elif modeset.mode is "o" and not modeset.given:
+            channel_ops.remove(modeset.nick)
+        elif modeset.mode is "v" and modeset.given:
+            channel_voices.append(modeset.nick)
+        elif modeset.mode is "v" and not modeset.given:
+            channel_voices.remove(modeset.nick)
+    except ValueError:
+        pass
     #print modeset
     #setter, to, mode, given[, nick]
 
 def process_kick(kicker, channel, nick, comment):
     try:
         channel_ops.remove(nick)
-    except Error:
+    except ValueError:
         pass
 
     try:
         channel_voices.remove(nick)
-    except Error:
+    except ValueError:
         pass
 
 def process_quit(nick, comment):
     try:
         channel_ops.remove(nick)
-    except Error:
+    except ValueError:
         pass
 
     try:
         channel_voices.remove(nick)
-    except Error:
+    except ValueError:
         pass
 
 def process_part(nick, channel):
     try:
         channel_ops.remove(nick)
-    except Error:
+    except ValueError:
         pass
 
     try:
         channel_voices.remove(nick)
-    except Error:
+    except ValueError:
         pass
 
 irc = IrcClient(server, port, nick, realname)
