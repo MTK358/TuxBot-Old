@@ -5,7 +5,7 @@ server irc.esper.net 6667
 command-prefixes !  TuxBot *, *
 quitmessage Segmentation fault
 
-on-message .*(hi|hello|hey|good (morning|afternoon|evening|night))\s+tuxbot  \1 \s!
+on-message .*(hi|hello|hey|good (morning|afternoon|evening|night))|hi|hello|hey\s+tuxbot  \1 \s!
 on-message .*(i (hate|dont like) tuxbot|tuxbot is (stupid|dumb|useless)).*  Shut up!  Really? :(  Why?  You do not have to like me =P  You must be kidding! O.O
 on-message .*windows is.*better than.*  Windows is just stupid. ;)
 on-message yesno .*  Yes.  No.  Yes, absolutely. :D  No, not really. ;)  Yes, why not?  No!!! O.O  Maybe...  I don't know. :/  Well, what do /you/ think?!  I am not authorized to answer to a question like this.
@@ -15,4 +15,4 @@ on-message tuxgames  Games featuring Tux in the Ubuntu or PlayDeb repository: - 
 # on-message .*need help with .*  [do-command] !help \2  |<-- not working yet
 # ----------
 # Please change the following text in every edit. Add 1 to the version number and use your name.
-on-message .*tuxbot version.*  This is config file version 44, last change by ToBeFree
+on-message .*tuxbot version.*  This is config file version 45, last change by ToBeFree
