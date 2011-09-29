@@ -200,7 +200,7 @@ def process_command(line, sender):
     # !version -- get TuxBot's version. Assumes that TuxBot is run from its git repository directory
     match = re.match(r'version$', line)
     if match:
-        pipe = os.popen('git log --pretty=format:"git commit %h (%s)" | sed -n 1p')
+        pipe = os.popen('git log --pretty=format:"git commit %h (%s)"')
         irc.send_message(pipe.readline())
         pipe.close()
         return True
