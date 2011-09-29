@@ -16,4 +16,4 @@ on-message tuxgames  Games featuring Tux in the Ubuntu or PlayDeb repository: - 
 # on-message .*need help with .*  [do-command] !help \2  |<-- not working yet
 # ----------
 # Please change the following text in every edit. Add 1 to the version number and use your name.
-on-message .*tuxbot version.*  This is config file version 47, last change by ToBeFree
+on-message config-version.*  This is config file version 47, last change by ToBeFree
