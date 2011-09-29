@@ -13,6 +13,3 @@ on-message .*i wish you cold winds.*  May the ice bring you wisdom. :)
 # ^play FreeDroidRPG to understand this^
 on-message tuxgames  Games featuring Tux in the Ubuntu or PlayDeb repository: - ExtremeTuxRacer: Race down hills with Tux in 3D, using OpenGL. Needs a good graphics card. - FreeDroidRPG: A RPG about Tux saving the world from hostile robots. You can "hack" or just fight the robots. - SuperTux: A "Super Mario" clone using Tux instead of Mario and taking place somewhere in Antarctica - If you know more games, please tell one of the TuxBot developers about them.
 # on-message .*need help with .*  [do-command] !help \2  |<-- not working yet
-# ----------
-# Please change the following text in every edit. Add 1 to the version number and use your name.
-on-message .*tuxbot version.*  This is config file version 46, last change by ToBeFree
