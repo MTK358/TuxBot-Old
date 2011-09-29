@@ -6,6 +6,7 @@ command-prefixes !  TuxBot *, *
 quitmessage Segmentation fault
 
 on-message .*(hi|hello|hey|good (morning|afternoon|evening|night))\s+tuxbot  \1 \s!
+on-message hi.*  hi, \s! :)
 on-message .*(i (hate|dont like) tuxbot|tuxbot is (stupid|dumb|useless)).*  Shut up!  Really? :(  Why?  You do not have to like me =P  You must be kidding! O.O
 on-message .*windows is.*better than.*  Windows is just stupid. ;)
 on-message yesno .*  Yes.  No.  Yes, absolutely. :D  No, not really. ;)  Yes, why not?  No!!! O.O  Maybe...  I don't know. :/  Well, what do /you/ think?!  I am not authorized to answer to a question like this.
