@@ -24,8 +24,8 @@ import sys
 import time
 import random
 import os
-import exceptions
 import getpass
+import signal
 
 if len(sys.argv) != 2:
     print "Usage: " + sys.argv[0] + " path/to/config/file"
@@ -197,19 +197,20 @@ def process_command(line, sender):
         irc.send_message(getpass.getuser())
         return True
 
+    # !version -- get TuxBot's version. Assumes that TuxBot is run from its git repository directory
+    match = re.match(r'version$', line)
+    if match:
+        pipe = os.popen('git log --pretty=format:"git commit %h (%s)" | sed -n 1p')
+        irc.send_message(pipe.readline())
+        pipe.close()
+        return True
+
     # !quit -- make TuxBot quit
     match = re.match(r'quit$', line)
     if match:
         irc.quit(quitmessage)
         sys.exit(0)
         return True
-
-    # !version -- get TuxBot's version. Assumes that TuxBot is run from its git repository directory
-    match = re.match(r'version$', line)
-    if match:
-        pipe = os.popen('echo "git `git log | sed -n 1p`"')
-        irc.send_message(pipe.readline())
-        pipe.close()
 
     return False
 
@@ -279,13 +280,18 @@ joined = False
 
 # I temporarily removed this becuase it makes it so that exceptions caused by
 # bugs aren't shown.
-old_excepthook = sys.excepthook
-def new_hook(type, value, traceback):
-    if type == exceptions.KeyboardInterrupt:
-        irc.quit(quitmessage)
-        return
-    old_excepthook(type, value, traceback)
-sys.excepthook = new_hook
+#old_excepthook = sys.excepthook
+#def new_hook(type, value, traceback):
+    #if type == exceptions.KeyboardInterrupt:
+        #irc.quit(quitmessage)
+        #return
+    #old_excepthook(type, value, traceback)
+#sys.excepthook = new_hook
+def signal_handler(signal, frame):
+    irc.quit(quitmessage)
+    print ''
+    sys.exit(0)
+signal.signal(signal.SIGINT, signal_handler)
 
 while True:
     line = irc.readline()
