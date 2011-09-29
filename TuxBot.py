@@ -25,6 +25,7 @@ import time
 import random
 import os
 import exceptions
+import getpass
 
 if len(sys.argv) != 2:
     print "Usage: " + sys.argv[0] + " path/to/config/file"
@@ -190,6 +191,12 @@ def process_command(line, sender):
         http://www.gnu.org/licenses/gpl-3.0.html''')
         return True
 
+    #!user -- display the username which this python script is running under
+    match = re.match(r'user$', line)
+    if match:
+        irc.send_message(getpass.getuser())
+        return True
+
     # !quit -- make TuxBot quit
     match = re.match(r'quit$', line)
     if match:
@@ -265,12 +272,13 @@ joined = False
 
 # I temporarily removed this becuase it makes it so that exceptions caused by
 # bugs aren't shown.
-'''old_excepthook = sys.excepthook
+old_excepthook = sys.excepthook
 def new_hook(type, value, traceback):
     if type == exceptions.KeyboardInterrupt:
         irc.quit(quitmessage)
-        old_excepthook(type, value, traceback)
-sys.excepthook = new_hook'''
+        return
+    old_excepthook(type, value, traceback)
+sys.excepthook = new_hook
 
 while True:
     line = irc.readline()
