@@ -59,7 +59,7 @@ if not command_prefixes:
     print "Config file has no command-prefixes entry"
     sys.exit(1)
 
-commandref='''!help <key> -- get help about <key>
+commandref = '''!help <key> -- get help about <key>
 !man <section> <name> -- get the URL to an online man page
 !synopsis <section> <name> -- get the SYNOPSIS section of the specified man page
 !man <criteria> -- search for an online man page
@@ -73,6 +73,19 @@ commandref='''!help <key> -- get help about <key>
 !license or !credits or !authors -- view the license information and the names of the people who made TuxBot.'''
 
 opcommandref = '''!quit -- make TuxBot quit'''
+
+license = '''Copyright (C) 2011 Colson, LinuxUser324, Krenair and Tobias "ToBeFree" Frei.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+---
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+---
+http://www.gnu.org/licenses/gpl-3.0.html'''
 
 def clean_string(string):
     s = re.sub("[^-_\w\s]", "", string.lower())
@@ -182,18 +195,7 @@ def process_command(line, sender):
     # !license or !authors or !credits -- display license information and the names of the people who made TuxBot
     match = re.match(r'credits|authors|license$', line)
     if match:
-        irc.send_private_notice('''Copyright (C) 2011 Colson, LinuxUser324, Krenair and Tobias "ToBeFree" Frei.
-        This program is free software: you can redistribute it and/or modify
-        it under the terms of the GNU General Public License as published by
-        the Free Software Foundation, either version 3 of the License, or
-        (at your option) any later version.
-        ---
-        This program is distributed in the hope that it will be useful,
-         but WITHOUT ANY WARRANTY; without even the implied warranty of
-        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-        GNU General Public License for more details.
-        ---
-        http://www.gnu.org/licenses/gpl-3.0.html''', sender)
+        irc.send_private_notice(license, sender)
         return True
 
     #!user -- display the username which this python script is running under
