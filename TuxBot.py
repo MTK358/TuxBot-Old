@@ -70,8 +70,9 @@ commandref='''!help <key> -- get help about <key>
 !time -- show the current time
 !time <strftime> -- show the current time, with custom formatting. See "man strftime" for more.
 (Note: you can use "date" instead of "time" in the above two commands)
-!license or !credits or !authors -- view the license information and the names of the people who made TuxBot.
-!quit -- make TuxBot quit'''
+!license or !credits or !authors -- view the license information and the names of the people who made TuxBot.'''
+
+opcommandref = '''!quit -- make TuxBot quit'''
 
 def clean_string(string):
     s = re.sub("[^-_\w\s]", "", string.lower())
@@ -83,6 +84,8 @@ def process_command(line, sender):
     match = re.match(r'help$', line)
     if match:
         irc.send_private_notice(commandref, sender)
+        if sender in channel_ops + channel_voices:
+            irc.send_private_notice(opcommandref, sender)
         return True
 
     # !help <key> -- get help
