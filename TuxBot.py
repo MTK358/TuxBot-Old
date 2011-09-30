@@ -179,7 +179,7 @@ def process_command(line, sender):
     # !license or !authors or !credits -- display license information and the names of the people who made TuxBot
     match = re.match(r'credits|authors|license$', line)
     if match:
-        irc.send_message('''Copyright (C) 2011 Colson, LinuxUser324, Krenair and Tobias "ToBeFree" Frei.
+        irc.send_private_notice('''Copyright (C) 2011 Colson, LinuxUser324, Krenair and Tobias "ToBeFree" Frei.
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 3 of the License, or
@@ -190,7 +190,7 @@ def process_command(line, sender):
         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
         GNU General Public License for more details.
         ---
-        http://www.gnu.org/licenses/gpl-3.0.html''')
+        http://www.gnu.org/licenses/gpl-3.0.html''', sender)
         return True
 
     #!user -- display the username which this python script is running under
