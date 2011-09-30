@@ -215,7 +215,7 @@ def process_command(line, sender):
     # !quit -- make TuxBot quit
     match = re.match(r'quit$', line)
     if match:
-        if sender in channel_ops + channel_voices:
+        if sender not in channel_ops + channel_voices:
             irc.send_message(sender + ": Permission denied. You must be +o or +v.")
         else:
             irc.quit(quitmessage)
