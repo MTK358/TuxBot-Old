@@ -26,6 +26,8 @@ import random
 import os
 import getpass
 import signal
+import threading
+import select
 
 if len(sys.argv) != 2:
     print "Usage: " + sys.argv[0] + " path/to/config/file"
@@ -205,6 +207,16 @@ def process_command(line, sender):
         pipe.close()
         return True
 
+    match = re.match(r'perms$', line)
+    if match:
+        if sender in channel_ops:
+            irc.send_message('op')
+        elif sender in channel_voices:
+            irc.send_message('voice')
+        else:
+            irc.send_message('none')
+        return True
+
     # !quit -- make TuxBot quit
     match = re.match(r'quit$', line)
     if match:
@@ -239,8 +251,7 @@ def process_mode(modeset):
             channel_voices.remove(modeset.nick)
     except ValueError:
         pass
-    #print modeset
-    #setter, to, mode, given[, nick]
+    #modeset: setter, to, mode, given[, nick]
 
 def process_kick(kicker, channel, nick, comment):
     try:
@@ -275,19 +286,36 @@ def process_part(nick, channel):
     except ValueError:
         pass
 
+def process_name(name):
+    if name[:1] == '@':
+        channel_ops.append(name[1:])
+    elif name[:1] == "+":
+        channel_voices.append(name[1:])
+
 irc = IrcClient(server, port, nick, realname)
 joined = False
 
-# I temporarily removed this becuase it makes it so that exceptions caused by
-# bugs aren't shown.
-#old_excepthook = sys.excepthook
-#def new_hook(type, value, traceback):
-    #if type == exceptions.KeyboardInterrupt:
-        #irc.quit(quitmessage)
-        #return
-    #old_excepthook(type, value, traceback)
-#sys.excepthook = new_hook
+class ConsoleHandler(threading.Thread):
+    def handleLine(line):
+        print line
+
+    def run(self):
+        self.quit = True
+        line = ""
+        while self.quit is True:
+            if select.select([sys.stdin], [], [], 0)[0] is not []:
+                char = sys.stdin.read(1)
+                if char is "\n":
+                    handleLine(line)
+                    line = ""
+                    continue
+                line += char
+
+consolehandler = ConsoleHandler()
+#consolehandler.start()
+
 def signal_handler(signal, frame):
+    consolehandler.quit = False
     irc.quit(quitmessage)
     print ''
     sys.exit(0)
@@ -334,3 +362,8 @@ while True:
     if tmp is not None:
         for i in tmp:
             process_mode(i)
+            
+    tmp = irc.is_names(line)
+    if tmp is not None:
+        for name in tmp:
+            process_name(name)

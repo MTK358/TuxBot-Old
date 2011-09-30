@@ -133,6 +133,14 @@ class IrcClient:
                     nickindex += 1
             return out
         return None
+    
+    def is_names(self, string):
+        split = string.split(' ')
+        if split[1] == '353':
+            names = split[5:]
+            names[0] = names[0][1:]
+            return names
+        return None
 
 class ModeSet:
     def __init__(self, setter, to, mode, given, nick = None):
