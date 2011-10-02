@@ -27,7 +27,7 @@ import os
 import getpass
 import signal
 import threading
-import select
+import fcntl
 
 if len(sys.argv) != 2:
     print "Usage: " + sys.argv[0] + " path/to/config/file"
@@ -294,26 +294,21 @@ irc = IrcClient(server, port, nick, realname)
 joined = False
 
 class ConsoleHandler(threading.Thread):
-    def handleLine(line):
-        print line
-
     def run(self):
-        self.quit = True
+        self.keepgoing = True
         line = ""
-        while self.quit is True:
-            if select.select([sys.stdin], [], [], 0)[0] is not []:
-                char = sys.stdin.read(1)
-                if char is "\n":
-                    handleLine(line)
-                    line = ""
-                    continue
-                line += char
+        fcntl.fcntl(sys.stdin, fcntl.F_SETFL, os.O_NONBLOCK)
+        while self.keepgoing == True:
+            try:
+                irc.socket.send(sys.stdin.readline().strip() + "\r\n")
+            except IOError:
+                pass
 
 consolehandler = ConsoleHandler()
-#consolehandler.start()
+consolehandler.start()
 
 def signal_handler(signal, frame):
-    consolehandler.quit = False
+    consolehandler.keepgoing = False
     irc.quit(quitmessage)
     print ''
     sys.exit(0)
