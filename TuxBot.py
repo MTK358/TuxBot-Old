@@ -28,6 +28,7 @@ import getpass
 import signal
 import threading
 import fcntl
+import datetime
 
 if len(sys.argv) != 2:
     print "Usage: " + sys.argv[0] + " path/to/config/file"
@@ -58,6 +59,10 @@ command_prefixes = config.get_command_prefixes()
 if not command_prefixes:
     print "Config file has no command-prefixes entry"
     sys.exit(1)
+
+pipe = os.popen('git log --pretty=format:"git commit %h (%s)"')
+version = pipe.readline().strip()
+pipe.close()
 
 commandref = '''!help <key> -- get help about <key>
 !man <section> <name> -- get the URL to an online man page
@@ -207,9 +212,7 @@ def process_command(line, sender):
     # !version -- get TuxBot's version. Assumes that TuxBot is run from its git repository directory
     match = re.match(r'version$', line)
     if match:
-        pipe = os.popen('git log --pretty=format:"git commit %h (%s)"')
-        irc.send_message(pipe.readline())
-        pipe.close()
+        irc.send_message(version)
         return True
 
     # !quit -- make TuxBot quit
@@ -224,11 +227,24 @@ def process_command(line, sender):
 
     return False
 
-def process_message(line, sender):
+def process_message(line, to, sender):
     line = line.strip()
     for command_prefix in command_prefixes:
         if re.match(command_prefix, line) and process_command(line[len(command_prefix):], sender):
             return
+    if to == nick:
+        #private message
+        if line == "VERSION":
+            irc.send_private_notice("VERSION " + version + "", sender)
+        elif line == "TIME":
+            irc.send_private_notice("TIME " + datetime.datetime.now().strftime("%a %b %d %H:%M:%S") + "", sender)
+        #FINGER        - Returns the user's full name, and idle time.
+        #SOURCE        - Where to obtain a copy of a client.
+        #USERINFO    - A string set by the user (never the client coder)
+        #CLIENTINFO    - Dynamic master index of what a client knows.
+        #ERRMSG        - Used when an error needs to be replied with.
+        #PING        - Used to measure the delay of the IRC network between clients.
+        return
     response = config.get_response(clean_string(line))
     if response:
         irc.send_message(response.replace("\\s", sender))
@@ -335,8 +351,8 @@ while True:
 
     # respond to posts on the channel
     tmp = irc.is_message(line)
-    if tmp and tmp[1] == channel:
-        process_message(tmp[2], tmp[0])
+    if tmp is not None:
+        process_message(tmp[2], tmp[1], tmp[0])
         
     tmp = irc.is_quit(line)
     if tmp is not None:

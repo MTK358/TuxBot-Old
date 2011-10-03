@@ -27,7 +27,6 @@ class IrcClient:
         self.socket.connect((server, port))
         self.set_nick(nick)
         self.socket.send("USER %s 8 * :%s\r\n" % (nick, realname))
-        self.buf = []
 
     def readline(self):
         line = ""
@@ -47,14 +46,14 @@ class IrcClient:
         self.socket.send("JOIN %s\r\n" % (channel))
         self.current_channel = channel
 
-    def send_message(self, message, channel = None):
-        if channel == None:
-            channel = self.current_channel
+    def send_message(self, message, to = None):
+        if to == None:
+            to = self.current_channel
         first = True
         for line in message.split("\n"):
             if not first:
                 time.sleep(0.3)
-            self.socket.send("PRIVMSG "+channel+" :"+line+"\r\n")
+            self.socket.send("PRIVMSG "+to+" :"+line+"\r\n")
             first = False
 
     def send_private_notice(self, message, nick):
