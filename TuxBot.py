@@ -238,6 +238,7 @@ def process_message(line, to, sender):
             irc.send_private_notice("VERSION " + version + "", sender)
         elif line == "TIME":
             irc.send_private_notice("TIME " + datetime.datetime.now().strftime("%a %b %d %H:%M:%S") + "", sender)
+        #elif line
         #FINGER        - Returns the user's full name, and idle time.
         #SOURCE        - Where to obtain a copy of a client.
         #USERINFO    - A string set by the user (never the client coder)
