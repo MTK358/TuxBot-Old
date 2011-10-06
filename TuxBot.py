@@ -26,6 +26,9 @@ import random
 import os
 import getpass
 import signal
+import threading
+import fcntl
+import datetime
 
 if len(sys.argv) != 2:
     print "Usage: " + sys.argv[0] + " path/to/config/file"
@@ -57,7 +60,11 @@ if not command_prefixes:
     print "Config file has no command-prefixes entry"
     sys.exit(1)
 
-commandref='''!help <key> -- get help about <key>
+pipe = os.popen('git log --pretty=format:"git commit %h (%s)"')
+version = pipe.readline().strip()
+pipe.close()
+
+commandref = '''!help <key> -- get help about <key>
 !man <section> <name> -- get the URL to an online man page
 !synopsis <section> <name> -- get the SYNOPSIS section of the specified man page
 !man <criteria> -- search for an online man page
@@ -68,8 +75,22 @@ commandref='''!help <key> -- get help about <key>
 !time -- show the current time
 !time <strftime> -- show the current time, with custom formatting. See "man strftime" for more.
 (Note: you can use "date" instead of "time" in the above two commands)
-!license or !credits or !authors -- view the license information and the names of the people who made TuxBot.
-!quit -- make TuxBot quit'''
+!license or !credits or !authors -- view the license information and the names of the people who made TuxBot.'''
+
+opcommandref = '''!quit -- make TuxBot quit'''
+
+license = '''Copyright (C) 2011 Colson, LinuxUser324, Krenair and Tobias "ToBeFree" Frei.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+---
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+---
+http://www.gnu.org/licenses/gpl-3.0.html'''
 
 def clean_string(string):
     s = re.sub("[^-_\w\s]", "", string.lower())
@@ -81,6 +102,8 @@ def process_command(line, sender):
     match = re.match(r'help$', line)
     if match:
         irc.send_private_notice(commandref, sender)
+        if sender in channel_ops + channel_voices:
+            irc.send_private_notice(opcommandref, sender)
         return True
 
     # !help <key> -- get help
@@ -177,18 +200,7 @@ def process_command(line, sender):
     # !license or !authors or !credits -- display license information and the names of the people who made TuxBot
     match = re.match(r'credits|authors|license$', line)
     if match:
-        irc.send_message('''Copyright (C) 2011 Colson, LinuxUser324, Krenair and Tobias "ToBeFree" Frei.
-        This program is free software: you can redistribute it and/or modify
-        it under the terms of the GNU General Public License as published by
-        the Free Software Foundation, either version 3 of the License, or
-        (at your option) any later version.
-        ---
-        This program is distributed in the hope that it will be useful,
-         but WITHOUT ANY WARRANTY; without even the implied warranty of
-        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-        GNU General Public License for more details.
-        ---
-        http://www.gnu.org/licenses/gpl-3.0.html''')
+        irc.send_private_notice(license, sender)
         return True
 
     #!user -- display the username which this python script is running under
@@ -200,26 +212,41 @@ def process_command(line, sender):
     # !version -- get TuxBot's version. Assumes that TuxBot is run from its git repository directory
     match = re.match(r'version$', line)
     if match:
-        pipe = os.popen('git log --pretty=format:"git commit %h (%s)"')
-        irc.send_message(pipe.readline())
-        pipe.close()
+        irc.send_message(version)
         return True
 
     # !quit -- make TuxBot quit
     match = re.match(r'quit$', line)
     if match:
-        irc.quit(quitmessage)
-        sys.exit(0)
+        if sender not in channel_ops + channel_voices:
+            irc.send_message(sender + ": Permission denied. You must be +o or +v.")
+        else:
+            irc.quit(quitmessage)
+            sys.exit(0)
         return True
 
     return False
 
-def process_message(line, sender):
+def process_message(line, to, sender):
     line = line.strip()
     print (command_prefixes)
     for command_prefix in command_prefixes:
         if re.match(command_prefix, line) and process_command(line[len(command_prefix):], sender):
             return
+    if to == nick:
+        #private message
+        if line == "VERSION":
+            irc.send_private_notice("VERSION " + version + "", sender)
+        elif line == "TIME":
+            irc.send_private_notice("TIME " + datetime.datetime.now().strftime("%a %b %d %H:%M:%S") + "", sender)
+        #elif line
+        #FINGER        - Returns the user's full name, and idle time.
+        #SOURCE        - Where to obtain a copy of a client.
+        #USERINFO    - A string set by the user (never the client coder)
+        #CLIENTINFO    - Dynamic master index of what a client knows.
+        #ERRMSG        - Used when an error needs to be replied with.
+        #PING        - Used to measure the delay of the IRC network between clients.
+        return
     response = config.get_response(clean_string(line))
     if response:
         irc.send_message(response.replace("\\s", sender))
@@ -240,8 +267,7 @@ def process_mode(modeset):
             channel_voices.remove(modeset.nick)
     except ValueError:
         pass
-    #print modeset
-    #setter, to, mode, given[, nick]
+    #modeset: setter, to, mode, given[, nick]
 
 def process_kick(kicker, channel, nick, comment):
     try:
@@ -276,19 +302,31 @@ def process_part(nick, channel):
     except ValueError:
         pass
 
+def process_name(name):
+    if name[:1] == '@':
+        channel_ops.append(name[1:])
+    elif name[:1] == "+":
+        channel_voices.append(name[1:])
+
 irc = IrcClient(server, port, nick, realname)
 joined = False
 
-# I temporarily removed this becuase it makes it so that exceptions caused by
-# bugs aren't shown.
-#old_excepthook = sys.excepthook
-#def new_hook(type, value, traceback):
-    #if type == exceptions.KeyboardInterrupt:
-        #irc.quit(quitmessage)
-        #return
-    #old_excepthook(type, value, traceback)
-#sys.excepthook = new_hook
+class ConsoleHandler(threading.Thread):
+    def run(self):
+        self.keepgoing = True
+        line = ""
+        fcntl.fcntl(sys.stdin, fcntl.F_SETFL, os.O_NONBLOCK)
+        while self.keepgoing == True:
+            try:
+                irc.socket.send(sys.stdin.readline().strip() + "\r\n")
+            except IOError:
+                pass
+
+consolehandler = ConsoleHandler()
+consolehandler.start()
+
 def signal_handler(signal, frame):
+    consolehandler.keepgoing = False
     irc.quit(quitmessage)
     print ''
     sys.exit(0)
@@ -315,8 +353,8 @@ while True:
 
     # respond to posts on the channel
     tmp = irc.is_message(line)
-    if tmp and tmp[1] == channel:
-        process_message(tmp[2], tmp[0])
+    if tmp is not None:
+        process_message(tmp[2], tmp[1], tmp[0])
         
     tmp = irc.is_quit(line)
     if tmp is not None:
@@ -335,3 +373,8 @@ while True:
     if tmp is not None:
         for i in tmp:
             process_mode(i)
+            
+    tmp = irc.is_names(line)
+    if tmp is not None:
+        for name in tmp:
+            process_name(name)

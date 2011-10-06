@@ -27,7 +27,6 @@ class IrcClient:
         self.socket.connect((server, port))
         self.set_nick(nick)
         self.socket.send("USER %s 8 * :%s\r\n" % (nick, realname))
-        self.buf = []
 
     def readline(self):
         line = ""
@@ -47,14 +46,14 @@ class IrcClient:
         self.socket.send("JOIN %s\r\n" % (channel))
         self.current_channel = channel
 
-    def send_message(self, message, channel = None):
-        if channel == None:
-            channel = self.current_channel
+    def send_message(self, message, to = None):
+        if to == None:
+            to = self.current_channel
         first = True
         for line in message.split("\n"):
             if not first:
                 time.sleep(0.3)
-            self.socket.send("PRIVMSG "+channel+" :"+line+"\r\n")
+            self.socket.send("PRIVMSG "+to+" :"+line+"\r\n")
             first = False
 
     def send_private_notice(self, message, nick):
@@ -106,32 +105,34 @@ class IrcClient:
         return None
 
     def is_mode(self, string):
-        match = re.match(r':([^!]+)[^\s]+ MODE ([^\s]+) (.*)', string)
+        match = re.match(r':([a-zA-Z@!\.]+) MODE ([^\s]+) (.+)$', string)
         if match:
+            modes = []
             setter = match.group(1)
             to = match.group(2)
-            data = match.group(3)
-            if "+" in data:
-                index = data.find("+")
-            elif "-" in data:
-                index = data.find("-")
-            else:
-                index = data.find("+")
-            index = data[index:].find(" ")
-            nicks = data[index + 1:].split(" ")
-            modes = data[:index]
-            nickindex = 0
-            give = None
-            out = []
-            for i in modes:
-                if i is "+":
+            split = match.group(3).split(" ")
+            if split[0][0] == ":":
+                split[0] = split[0][1:] #if first character is ":", remove it
+            paramindex = 1
+            for mode in split[0]:
+                if mode is "+":
                     give = True
-                elif i is "-":
+                elif mode is "-":
                     give = False
-                elif i in ["o", "v"] and give is not None:
-                    out.append(ModeSet(setter, to, i, give, nicks[nickindex]))
-                    nickindex += 1
-            return out
+                elif mode in ["q", "a", "o", "h", "v", "b", "e", "l"]:
+                    modes.append(ModeSet(setter, to, mode, give, split[paramindex]))
+                    paramindex += 1
+                else:
+                    modes.append(ModeSet(setter, to, mode, give))
+            return modes
+        return None
+    
+    def is_names(self, string):
+        split = string.split(' ')
+        if split[1] == '353':
+            names = split[5:]
+            names[0] = names[0][1:]
+            return names
         return None
 
 class ModeSet:
@@ -140,5 +141,4 @@ class ModeSet:
         self.to = to
         self.mode = mode
         self.given = given
-        if nick is not None:
-            self.nick = nick
+        self.nick = nick

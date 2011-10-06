@@ -9,74 +9,17 @@
 "-" = This is not done yet.
 "+" = This has been done.
 
-+ Non-alphanumeric characters should be removed from the input. "Hey its cool" should be the same as "Hey, it's cool!".
-++ if this function is not implemented, it will be nearly impossible to "talk" with TuxBot using predefined sentences.
-
-+ ToBeFree will add a lot of questions and answers to TuxBot, some funny, some helpful. Here are some examples:
--> Q: !help Windows crashed -- A: Use "format c: /x" to get rid of all your problems! :)
--> Q: !help Python -- A: [some] [helpful] [links] ;)
--> Q: !wikipedia WHATEVER -- A: [http://en.wikipedia.org/wiki/WHATEVER] :-)
-
-+ To be able to add questions and answers, there has to be a relatively easy system ToBeFree can use to add them.
--> ToBeFree is not good at coding python, but he really wants to code at least /some/ things in this bot. So he needs the possibility to do that easily. ;)
-
-- Do you want to publish TuxBot under a free license?
--- like GPL?
--- like CC-by-nc-sa?
-
 - TuxBot has a big problem that needs to be solved before he is regularily used in the chat: He listens to everyone.
 -- That means:
 -> Every user can use !quit.
 -> Every user can talk to him.
 --- While the first thing is really bad, the second thing is what we want. So we need to add the possibility to make commands "voiced-people-only" or even "operator-only". And the majority of commands needs to be "for everyone".
 
-+ Shall we add the github-link to the #linux topic? ToBeFree would like that, but there is a condition:
-+ Only LinuxUser324, ToBeFree and Colson should be allowed to modify the code.
-#(LinuxUser324) I think that it might be a good idea. Also, someone modifying it is not an issue since GitHub won't let them without my permission.
-
-+ Colson needs to tell ToBeFree how to use github xD
-
-+ Maybe TuxBot should not only listen to "!command" commands. He should also answer if somebody - for example - says:
--- "TuxBot is cool"
-++ "TuxBot is stupid"
--- "TuxBot, COMMAND"
--- ...
-
-- Variable-based commands to add:
-++ !time
-++ !date
-++ !xkcd (<-- random xkcd comic, if possible)
-++ !xkcd-linux (<-- random xkcd comic featuring Linux, Windows, free software, ... - may be hard to implement)
-#(LinuxUser324) It's actully not hard to implement, but it means that someone needs to look through all the xkcd comics and find all the Linux-related ones.
-#(ToBeFree) I will do that if there is a way to add this information in the hard code or in a configuration text file that is shipped with the bot.
-
-++ !xkcd-geek (<-- random xkcd comic you only understand if you are a really, really big geek/nerd.)
-++ !wikipedia-random (<-- random Wikipedia article)
-++ !wikipedia COMMAND (<-- as mentioned above, give out a Wikipedia link.)
-++ !wikipedia-ARGUMENT COMMAND (<-- Output link: "http://ARGUMENT.wikipedia.org/wiki/COMMAND")
-#(ToBeFree) This is to be able to get Wikipedia texts in your own language. :)
-
----- Feel free to add your own ideas, but please use "(NAME)" or something like that to show who added the idea.
-
-#(LinuxUser324) I think that it might be a good idea to have commands to set things like questions and answers (rather than hard-coding them), and for TuxBot to only accept such commands from ops. This means that TuxBot won't have to be taken offline to change them. If you want it to come with pre-defined answers, how about including a data file pre-filled with them in the GitHub repo?
-#(ToBeFree) The reason why I wanted hardcoded questions, answers and commands is that I want them to be a real part of the bot. A configuration file would be okay, the only thing I really want is that the people who download this bot get this thing as a part of the bot.
-#(ToBeFree) Also, writing a configuration file might be easier for me than hardcoding every single command. I just need a powerful and easy method to add commands, questions and answers. Wildcards need to be supported. I would be really happy to see a configuration file like this one working:
-# START CONFIGURATION FILE EXAMPLE
-hey thats cool
-Yes, it really is. ;)
-hey thats uncool
-Really?
-this is a test
-And this is the answer! :D
-* ~001~ is~002~stupid *
-No, I do not think that ~001~ is~002~stupid.
-# END CONFIGURATION FILE EXAMPLE
-#(ToBeFree) Coding the variables might be really, really hard. But the first things like "hey thats cool" should be relatively easy to implement (I hope). :)
-#(LinuxUser324) What do you mean by "coding the variables"?
-#(LinuxUser324) I did it already, but using regular expressions and backreferences instead of your special syntax:
-# START CONFIG FILE EXAMPLE
-help hey thats cool  Yes, it really is. ;)
-help hey thats uncool  Really?
-help this is a test  And this is the answer! :D
-help-re (.+) is(.+)stupid  No, I do not think that \1 is\2stupid.
-#END CONFIG FILE EXAMPLE
+- Priorities for commands in the config-file. An example:
+---------------------------------------------------------
+on-message-1 .*hi TuxBot.*  hi, \s
+on-message hi.*  hi
+on-message-2 .*hi TuxBot I like you.*  hi, \s, I like you too.
+---------------------------------------------------------
+# higher numbers = higher priority; no number = priority 0
+# higher priority messages are checked first; only if there is no match, the next priority is checked.
