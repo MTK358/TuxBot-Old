@@ -314,7 +314,6 @@ class ConsoleHandler(threading.Thread):
     def run(self):
         self.keepgoing = True
         line = ""
-        fcntl.fcntl(sys.stdin, fcntl.F_SETFL, os.O_NONBLOCK)
         while self.keepgoing == True:
             try:
                 irc.socket.send(sys.stdin.readline().strip() + "\r\n")
