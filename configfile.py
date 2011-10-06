@@ -29,15 +29,14 @@ separated by double spaces:
     quitmessage Segmentation fault
 
 Help lines define answers to questions asked using the !help command. They
-consist of the word "help", followed by a space, the question, two spaces,
-and then the answer. Here's an example:
+consist of the word "help", followed by a space, the question in the form of
+a regualr expression, two spaces, and then the answer. Here's an example:
 
     help example question  example answer
 
-If you use "help-re" instead of "help", the question is a regular expression
-and the answer can contain backreferences. For example:
+The answer may contain backreferences to parenthesized groups in the pattern:
 
-    help-re example([0-9]+)  Number: \1
+    help example([0-9]+)  Number: \1
 
 You can also set pre-defined responses when someone says something:
 
@@ -48,8 +47,16 @@ spaces:
 
     on-message example  response 1  response 2  response 3
 
-It also replaces "\s" in the responses with the nick of the person who wrote
-the message.
+You can run a command when a certain message matching a regular expression is
+recieved using "run-command-on-message". For example, this runs the "help"
+command when someone says "example":
+
+    run-command-on-message example  help
+
+"help", "on-message", and "run-command-on-message" all replace "\s" with the
+nickname of the person TuxBot is replying to.
+
+More of these might be added later.
 
 You can also add comics to the list that !xkcd-linux and !xkcd-geek pick
 randomly from:
@@ -74,165 +81,89 @@ class ConfigFile:
         self.path = path
 
     def get_nick(self):
-        f = None
-        try:
-            f = open(self.path, "r")
-            while True:
-                line = f.readline()
-                if len(line) == 0:
-                    break
-                match = re.match("nick (.+)$", line)
-                if match:
-                    return match.group(1)
-            return l
-        except:
-            pass
-        finally:
-            if f:
-                f.close()
+        match = self._get_matching_line(re.compile('nick (.+)$'))
+        if match:
+            return match.group(1)
         return None
 
     def get_realname(self):
-        f = None
-        try:
-            f = open(self.path, "r")
-            while True:
-                line = f.readline()
-                if len(line) == 0:
-                    break
-                match = re.match("realname (.+)$", line)
-                if match:
-                    return match.group(1)
-            return l
-        except:
-            pass
-        finally:
-            if f:
-                f.close()
+        match = self._get_matching_line(re.compile('realname (.+)$'))
+        if match:
+            return match.group(1)
         return None
 
     def get_quitmessage(self):
-        f = None
-        try:
-            f = open(self.path, "r")
-            while True:
-                line = f.readline()
-                if len(line) == 0:
-                    break
-                match = re.match("quitmessage (.+)$", line)
-                if match:
-                    return match.group(1)
-            return l
-        except:
-            pass
-        finally:
-            if f:
-                f.close()
+        match = self._get_matching_line(re.compile('quitmessage (.+)$'))
+        if match:
+            return match.group(1)
         return None
 
     def get_channel(self):
-        f = None
-        try:
-            f = open(self.path, "r")
-            while True:
-                line = f.readline()
-                if len(line) == 0:
-                    break
-                match = re.match("channel (.+)$", line)
-                if match:
-                    return match.group(1)
-            return l
-        except:
-            pass
-        finally:
-            if f:
-                f.close()
+        match = self._get_matching_line(re.compile('channel (.+)$'))
+        if match:
+            return match.group(1)
         return None
 
     def get_server(self):
-        f = None
-        try:
-            f = open(self.path, "r")
-            while True:
-                line = f.readline()
-                if len(line) == 0:
-                    break
-                match = re.match("server (.+) (.+)$", line)
-                if match:
-                    return match.group(1), int(match.group(2))
-            return l
-        except:
-            pass
-        finally:
-            if f:
-                f.close()
+        match = self._get_matching_line(re.compile('server (.+) (.+)$'))
+        if match:
+            return match.group(1), int(match.group(2))
         return None
 
     def get_command_prefixes(self):
-        f = None
-        try:
-            f = open(self.path, "r")
-            while True:
-                line = f.readline()
-                if len(line) == 0:
-                    break
-                match = re.match("command-prefixes (.+)$", line)
-                if match:
-                    return match.group(1).split("  ");
-        except:
-            pass
-        finally:
-            if f:
-                f.close()
+        match = self._get_matching_line(re.compile('command-prefixes (.+)$'))
+        if match:
+            return match.group(1).split("  ")
         return None
 
     def get_response(self, key):
-        f = None
-        try:
-            f = open(self.path, "r")
-            while True:
-                line = f.readline()
-                if len(line) == 0:
-                    break
-                match = re.match("on-message (.+?)  (.+)$", line)
-                if match:
-                    pattern = match.group(1)
-                    if re.match(pattern+"$", key):
-                        replacement = match.group(2).split("  ")
-                        replacement = replacement[random.randint(0, len(replacement) - 1)]
-                        return re.sub(pattern, replacement, key)
-        except:
-            return None
-        finally:
-            if f:
-                f.close()
+        matches = self._get_all_matching_lines(re.compile('on-message (.+?)  (.+)'))
+        for match in matches:
+            pattern = match.group(1)
+            if re.match(pattern+"$", key):
+                replacement = match.group(2).split("  ")
+                replacement = replacement[random.randint(0, len(replacement) - 1)]
+                return re.sub(pattern, replacement, key)
+        return None
+
+    def get_command_response(self, key):
+        matches = self._get_all_matching_lines(re.compile('run-command-on-message (.+?)  (.+)'))
+        for match in matches:
+            pattern = match.group(1)
+            if re.match(pattern+"$", key):
+                replacement = match.group(2).split("  ")
+                replacement = replacement[random.randint(0, len(replacement) - 1)]
+                return re.sub(pattern, replacement, key)
+        return None
 
     def get_help(self, key):
-        escaped_key = re.escape(key)
-        f = None
-        try:
-            f = open(self.path, "r")
-            while True:
-                line = f.readline()
-                if len(line) == 0:
-                    break
-                match = re.match("help "+escaped_key+"  (.+)$", line)
-                if match:
-                    return match.group(1)
-                match = re.match("help-re (.+?)  (.+)$", line)
-                if match:
-                    pattern = match.group(1)
-                    replacement = match.group(2)
-                    if re.match(pattern+"$", key):
-                        return re.sub(pattern, replacement, key)
-        except:
-            return None
-        finally:
-            if f:
-                f.close()
+        matches = self._get_all_matching_lines(re.compile('help (.+?)  (.+)'))
+        for match in matches:
+            pattern = match.group(1)
+            replacement = match.group(2)
+            if re.match(pattern + "$", key):
+                return re.sub(pattern, replacement, key)
+        return None
 
     def get_linux_xkcds(self):
+        matches = self._get_all_matching_lines(re.compile('xkcd-geek (.*)$'))
+        if matches == None:
+            return None;
         l = []
+        for match in matches:
+            l.append(match.group(1))
+        return l
+
+    def get_geek_xkcds(self):
+        matches = self._get_all_matching_lines(re.compile('xkcd-geek (.*)$'))
+        if matches == None:
+            return None;
+        l = []
+        for match in matches:
+            l.append(match.group(1))
+        return l
+    
+    def _get_matching_line(self, pattern):
         f = None
         try:
             f = open(self.path, "r")
@@ -240,17 +171,16 @@ class ConfigFile:
                 line = f.readline()
                 if len(line) == 0:
                     break
-                match = re.match("xkcd-linux (.+)$", line)
+                match = pattern.match(line)
                 if match:
-                    l.append(match.group(1))
-            return l
+                    return match
         except:
             return None
         finally:
             if f:
                 f.close()
-
-    def get_geek_xkcds(self):
+        
+    def _get_all_matching_lines(self, pattern):
         l = []
         f = None
         try:
@@ -259,9 +189,9 @@ class ConfigFile:
                 line = f.readline()
                 if len(line) == 0:
                     break
-                match = re.match("xkcd-geek (.+)$", line)
+                match = pattern.match(line)
                 if match:
-                    l.append(match.group(1))
+                    l.append(match)
             return l
         except:
             return None

@@ -216,6 +216,7 @@ def process_command(line, sender):
 
 def process_message(line, sender):
     line = line.strip()
+    print (command_prefixes)
     for command_prefix in command_prefixes:
         if re.match(command_prefix, line) and process_command(line[len(command_prefix):], sender):
             return
