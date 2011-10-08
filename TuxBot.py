@@ -92,9 +92,7 @@ GNU General Public License for more details.
 http://www.gnu.org/licenses/gpl-3.0.html'''
 
 def clean_string(string):
-    s = re.sub("[^-_\w\s]", "", string.lower())
-    s = re.sub("\s+", " ", s)
-    return s
+    return re.sub("\s+", " ", re.sub("[^-_\w\s]", "", string.lower()))
 
 def process_command(line, sender):
     # !help -- get help about TuxBot's commads
@@ -319,7 +317,7 @@ while True:
     s = select.select([irc.socket, sys.stdin], [], [], 0)[0]
     if sys.stdin in s:
         irc.socket.send(sys.stdin.readline().strip() + "\r\n")
-    
+
     if irc.socket in s:
         line = irc.readline()
         if line is "" or line is None:
@@ -343,7 +341,7 @@ while True:
         tmp = irc.is_message(line)
         if tmp is not None:
             process_message(tmp[2], tmp[1], tmp[0])
-        
+
         tmp = irc.is_quit(line)
         if tmp is not None:
             process_quit(tmp[0], tmp[1])
@@ -361,7 +359,7 @@ while True:
         if tmp is not None:
             for i in tmp:
                 process_mode(i)
-            
+
         tmp = irc.is_names(line)
         if tmp is not None:
             for name in tmp:
