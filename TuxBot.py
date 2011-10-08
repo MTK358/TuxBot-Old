@@ -26,9 +26,8 @@ import random
 import os
 import getpass
 import signal
-import threading
-import fcntl
 import datetime
+import select
 
 if len(sys.argv) != 2:
     print "Usage: " + sys.argv[0] + " path/to/config/file"
@@ -310,69 +309,60 @@ def process_name(name):
 irc = IrcClient(server, port, nick, realname)
 joined = False
 
-class ConsoleHandler(threading.Thread):
-    def run(self):
-        self.keepgoing = True
-        line = ""
-        while self.keepgoing == True:
-            try:
-                irc.socket.send(sys.stdin.readline().strip() + "\r\n")
-            except IOError:
-                pass
-
-consolehandler = ConsoleHandler()
-consolehandler.start()
-
 def signal_handler(signal, frame):
-    consolehandler.keepgoing = False
     irc.quit(quitmessage)
     print ''
     sys.exit(0)
 signal.signal(signal.SIGINT, signal_handler)
 
 while True:
-    line = irc.readline()
-    if line is "" or line is None:
-        continue
-    print line
+    s = select.select([irc.socket, sys.stdin], [], [], 0)[0]
+    if sys.stdin in s:
+        irc.socket.send(sys.stdin.readline().strip() + "\r\n")
+    
+    if irc.socket in s:
+        line = irc.readline()
+        if line is "" or line is None:
+            continue
+        print line
 
-    # respond to PING commands
-    tmp = irc.is_ping(line)
-    if tmp:
-        irc.send_pong(tmp)
-        continue
+        # respond to PING commands
+        tmp = irc.is_ping(line)
+        if tmp:
+            irc.send_pong(tmp)
+            continue
 
-    if not joined and line == ":"+nick+" MODE "+nick+" :+i":
-        irc.join(channel)
-        joined = True
+        if not joined and line == ":"+nick+" MODE "+nick+" :+i":
+            irc.join(channel)
+            joined = True
 
-    if not joined:
-        continue
+        if not joined:
+            continue
 
-    # respond to posts on the channel
-    tmp = irc.is_message(line)
-    if tmp is not None:
-        process_message(tmp[2], tmp[1], tmp[0])
+        # respond to posts on the channel
+        tmp = irc.is_message(line)
+        if tmp is not None:
+            process_message(tmp[2], tmp[1], tmp[0])
         
-    tmp = irc.is_quit(line)
-    if tmp is not None:
-        process_quit(tmp[0], tmp[1])
+        tmp = irc.is_quit(line)
+        if tmp is not None:
+            process_quit(tmp[0], tmp[1])
 
-    tmp = irc.is_kick(line)
-    if tmp is not None:
-        process_kick(tmp[0], tmp[1], tmp[2], tmp[3])
+        tmp = irc.is_kick(line)
+        if tmp is not None:
+            process_kick(tmp[0], tmp[1], tmp[2], tmp[3])
 
-    tmp = irc.is_part(line)
-    if tmp is not None:
-        for channel in tmp[1]:
-            process_part(tmp[0], channel)
+        tmp = irc.is_part(line)
+        if tmp is not None:
+            for channel in tmp[1]:
+                process_part(tmp[0], channel)
 
-    tmp = irc.is_mode(line)
-    if tmp is not None:
-        for i in tmp:
-            process_mode(i)
+        tmp = irc.is_mode(line)
+        if tmp is not None:
+            for i in tmp:
+                process_mode(i)
             
-    tmp = irc.is_names(line)
-    if tmp is not None:
-        for name in tmp:
-            process_name(name)
+        tmp = irc.is_names(line)
+        if tmp is not None:
+            for name in tmp:
+                process_name(name)
