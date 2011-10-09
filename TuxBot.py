@@ -314,7 +314,7 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 while True:
-    s = select.select([irc.socket, sys.stdin], [], [], 0)[0]
+    s = select.select([irc.socket, sys.stdin], [], [], 1)[0]
     if sys.stdin in s:
         irc.socket.send(sys.stdin.readline().strip() + "\r\n")
 
@@ -364,5 +364,3 @@ while True:
         if tmp is not None:
             for name in tmp:
                 process_name(name)
-
-    time.sleep(0.01)
