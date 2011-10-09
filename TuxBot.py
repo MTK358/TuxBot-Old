@@ -364,3 +364,5 @@ while True:
         if tmp is not None:
             for name in tmp:
                 process_name(name)
+
+    time.sleep(0.01)
