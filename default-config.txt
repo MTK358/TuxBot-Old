@@ -14,7 +14,7 @@ on-message .*i wish you cold winds.*  May the ice bring you wisdom. :)
 # ^play FreeDroidRPG to understand this^
 on-message tuxgames  Games featuring Tux in the Ubuntu or PlayDeb repository: - ExtremeTuxRacer: Race down hills with Tux in 3D, using OpenGL. Needs a good graphics card. - FreeDroidRPG: A RPG about Tux saving the world from hostile robots. You can "hack" or just fight the robots. - SuperTux: A "Super Mario" clone using Tux instead of Mario and taking place somewhere in Antarctica - If you know more games, please tell one of the TuxBot developers about them.
 # on-message .*need help with .*  [do-command] !help \2  |<-- not working yet
-on-message cd .*  \s@TuxBot:~/\1$
+on-message cd (.*)  \s@TuxBot:~/\1$
 # cd is broken, I have tried a lot, but it still does not work. Where is the error? O.O
 on-message whoami  \s
 on-message rm .*  VirtualPenguinFileSystem is mounted as read-only.
