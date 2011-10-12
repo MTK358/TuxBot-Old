@@ -5,7 +5,7 @@ server irc.esper.net 6667
 command-prefixes !  TuxBot *, *
 quitmessage Segmentation fault
 
-on-message hi .*  hi! :)
+on-message (hi .*|hi)  hi! :)
 on-message .*(hi|hello|hey|good (morning|afternoon|evening|night))\s+tuxbot  \1 \s!
 on-message .*(i (hate|dont like) tuxbot|tuxbot is (stupid|dumb|useless)).*  Shut up!  Really? :(  Why?  You do not have to like me =P  You must be kidding! O.O
 on-message .*windows is.*better than.*  Windows is just stupid. ;)
