@@ -98,10 +98,10 @@ class ConfigFile:
             return match.group(1)
         return None
 
-    def get_channel(self):
+    def get_channels(self):
         match = self._get_matching_line(re.compile('channel (.+)$'))
         if match:
-            return match.group(1)
+            return match.group(1).split(", ")
         return None
 
     def get_server(self):

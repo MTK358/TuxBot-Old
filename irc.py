@@ -46,9 +46,7 @@ class IrcClient:
         self.socket.send("JOIN %s\r\n" % (channel))
         self.current_channel = channel
 
-    def send_message(self, message, to = None):
-        if to == None:
-            to = self.current_channel
+    def send_message(self, message, to):
         first = True
         for line in message.split("\n"):
             if not first:
@@ -98,10 +96,7 @@ class IrcClient:
     def is_part(self, string):
         match = re.match(r':([^!]+)[^\s]+ PART (.*)', string)
         if match:
-            channels = []
-            for channel in match.group(2).split(","):
-                channels.append(channel)
-            return match.group(1), channels
+            return match.group(1), match.group(2).split(",")
         return None
 
     def is_mode(self, string):
@@ -130,8 +125,8 @@ class IrcClient:
     def is_names(self, string):
         split = string.split(' ')
         if split[1] == '353':
-            names = split[5:]
-            names[0] = names[0][1:]
+            names = split[4:]
+            names[1] = names[1][1:]
             return names
         return None
 
