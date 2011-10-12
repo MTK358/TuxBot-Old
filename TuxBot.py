@@ -360,26 +360,32 @@ while True:
         tmp = irc.is_message(line)
         if tmp is not None:
             process_message(tmp[2], tmp[1], tmp[0])
+            continue
 
         tmp = irc.is_quit(line)
         if tmp is not None:
             process_quit(tmp[0], tmp[1])
+            continue
 
         tmp = irc.is_kick(line)
         if tmp is not None:
             process_kick(tmp[0], tmp[1], tmp[2], tmp[3])
+            continue
 
         tmp = irc.is_part(line)
         if tmp is not None:
             for channel in tmp[1]:
                 process_part(tmp[0], channel)
+            continue
 
         tmp = irc.is_mode(line)
         if tmp is not None:
             for i in tmp:
                 process_mode(i)
+            continue
 
         tmp = irc.is_names(line)
         if tmp is not None:
             for name in tmp[1:]:
                 process_name(name, tmp[0])
+            continue
