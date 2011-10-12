@@ -11,7 +11,7 @@
 
 - TuxBot has a big problem that needs to be solved before he is regularily used in the chat: He listens to everyone.
 -- That means:
--> Every user can use !quit.
++> Every user can use !quit.
 -> Every user can talk to him.
 --- While the first thing is really bad, the second thing is what we want. So we need to add the possibility to make commands "voiced-people-only" or even "operator-only". And the majority of commands needs to be "for everyone".
 
