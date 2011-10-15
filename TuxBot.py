@@ -28,7 +28,7 @@ import getpass
 import signal
 import datetime
 import select
-import Time
+import time
 
 if len(sys.argv) != 2:
     print "Usage: " + sys.argv[0] + " path/to/config/file"
@@ -252,14 +252,14 @@ def process_message(line, to, sender):
 flood_data = {} # channel as keywords, with the value as an array containing [user, timestamp, count]
 
 def flood_check(target, sender):
-    if target != nick and target in flood_data.keys():
-        if sender == flood_data[target][0] and Time.time() < flood_data[target][1] + 0.5:
+    if target in flood_data.keys():
+        if sender == flood_data[target][0] and time.time() < flood_data[target][1] + 0.5:
             flood_data[target][2] += 1
         if flood_data[target][2] >= 5:
-            # send kick message
+            irc.send_kick(target, sender)
             del flood_data[target]
     else:
-        flood_data[target] = [user,Time.time(),1]
+        flood_data[target] = [user,time.time(),1]
 
 channel_ops = {}
 channel_voices = {}
@@ -373,7 +373,7 @@ while True:
         tmp = irc.is_message(line)
         if tmp is not None:
             process_message(tmp[2], tmp[1], tmp[0])
-            flood_check(tmp[1],tmp[0]):
+            flood_check(tmp[1], tmp[0])
             continue
 
         tmp = irc.is_quit(line)
