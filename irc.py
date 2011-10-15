@@ -62,6 +62,9 @@ class IrcClient:
             self.socket.send("NOTICE "+nick+" :"+line+"\r\n")
             first = False
 
+    def send_kick(self, channel, nick):
+        self.socket.send("KICK %s %s\r\n" % (channel, nick))
+
     def send_pong(self, message):
         self.socket.send("PONG :%s\r\n" % (message))
 
