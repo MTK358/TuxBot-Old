@@ -19,11 +19,11 @@ Config File Syntax:
 
 You can configure which server, channel, nick, real name, quit message, and
 command prefixes TuxBot uses. You can have multiple command prefixes
-separated by double spaces:
+separated by double spaces, and multiple channels separated by spaces:
 
     nick TuxBot
     realname The #Linux Bot
-    channel #Linux
+    channel #Linux #example
     server irc.esper.net 6667
     command-prefixes !  TuxBot *, *
     quitmessage Segmentation fault
@@ -101,7 +101,7 @@ class ConfigFile:
     def get_channels(self):
         match = self._get_matching_line(re.compile('channel (.+)$'))
         if match:
-            return match.group(1).split(", ")
+            return match.group(1).split(" ")
         return None
 
     def get_server(self):

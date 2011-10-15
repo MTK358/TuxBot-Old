@@ -1,7 +1,6 @@
 nick TuxBot
 realname The #Linux Bot
-#format: #channel1, #channel2, #channel3
-channel #Linux
+channel #Linux #freiwuppertal
 server irc.esper.net 6667
 command-prefixes !  TuxBot *, *
 quitmessage Segmentation fault
