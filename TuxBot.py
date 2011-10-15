@@ -286,6 +286,8 @@ def process_mode(modeset):
             channel_voices[channel].remove(modeset.nick)
     except KeyError:
         pass
+    except ValueError:
+        pass
     #modeset: setter, to, mode, given[, nick]
 
 def process_kick(kicker, channel, nick, comment):
