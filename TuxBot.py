@@ -259,7 +259,7 @@ def flood_check(target, sender):
             irc.send_kick(target, sender)
             del flood_data[target]
     else:
-        flood_data[target] = [user,time.time(),1]
+        flood_data[target] = [sender, time.time(), 1]
 
 channel_ops = {}
 channel_voices = {}
