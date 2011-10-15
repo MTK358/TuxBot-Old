@@ -251,15 +251,20 @@ def process_message(line, to, sender):
 
 flood_data = {} # channel as keywords, with the value as an array containing [user, timestamp, count]
 
-def flood_check(target, sender):
-    if target in flood_data.keys():
-        if sender == flood_data[target][0] and time.time() < flood_data[target][1] + 0.5:
-            flood_data[target][2] += 1
-        if flood_data[target][2] >= 5:
-            irc.send_kick(target, sender)
-            del flood_data[target]
+def flood_check(channel, sender, message):
+    idstr = channel + " " + sender
+    if idstr in flood_data.keys():
+        if flood_data[idstr]["time"] > time.time() - 1.1 or message != flood_data[idstr]["message"]:
+            del flood_data[idstr]
+        else:
+            count = flood_data[idstr]["count"] + 1
+            if count >= 5:
+                irc.send_kick(channel, sender)
+                del flood_data[idstr]
+            else:
+                flood_data[idstr]["count"] = count
     else:
-        flood_data[target] = [sender, time.time(), 1]
+        flood_data[idstr] = {"time": time.time(), "count": 1, "message": message}
 
 channel_ops = {}
 channel_voices = {}
@@ -375,7 +380,7 @@ while True:
         tmp = irc.is_message(line)
         if tmp is not None:
             process_message(tmp[2], tmp[1], tmp[0])
-            flood_check(tmp[1], tmp[0])
+            flood_check(tmp[1], tmp[0], tmp[2])
             continue
 
         tmp = irc.is_quit(line)
