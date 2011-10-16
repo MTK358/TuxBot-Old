@@ -146,7 +146,7 @@ class ConfigFile:
         return None
 
     def get_linux_xkcds(self):
-        matches = self._get_all_matching_lines(re.compile('xkcd-geek (.*)$'))
+        matches = self._get_all_matching_lines(re.compile('xkcd-linux (.*)$'))
         if matches == None:
             return None;
         l = []
@@ -155,12 +155,12 @@ class ConfigFile:
         return l
 
     def get_geek_xkcds(self):
-        matches = self._get_all_matching_lines(re.compile('xkcd-geek (.*)$'))
+        matches = self._get_all_matching_lines(re.compile('xkcd-(geek|linux) (.*)$'))
         if matches == None:
             return None;
         l = []
         for match in matches:
-            l.append(match.group(1))
+            l.append(match.group(2))
         return l
     
     def _get_matching_line(self, pattern):
