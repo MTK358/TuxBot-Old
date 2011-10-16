@@ -249,21 +249,30 @@ def process_message(line, to, sender):
         irc.send_message(response.replace("\\s", sender), to)
         return
 
-flood_data = {} # channel as keywords, with the value as an array containing [user, timestamp, count]
+flood_data = {}
 
 def flood_check(channel, sender, message):
+    # don't respond to private messages
+    if channel == nick:
+        return
     idstr = channel + " " + sender
-    if idstr in flood_data.keys():
-        if flood_data[idstr]["time"] > time.time() - 1.1 or message != flood_data[idstr]["message"]:
-            del flood_data[idstr]
-        else:
+    found = False
+    for i in flood_data.keys():
+        # delete entries older than the timeout period
+        if flood_data[i]["time"] < time.time() - 2:
+            del flood_data[i]
+            continue
+        # if this message was posted before by the same person less than the timeout period ago
+        if i == idstr and message == flood_data[idstr]["message"]:
+            found = True
             count = flood_data[idstr]["count"] + 1
             if count >= 5:
-                irc.send_kick(channel, sender)
+                irc.send_kick(channel, sender, "Flooding")
                 del flood_data[idstr]
             else:
                 flood_data[idstr]["count"] = count
-    else:
+                flood_data[idstr]["time"] = time.time()
+    if not found:
         flood_data[idstr] = {"time": time.time(), "count": 1, "message": message}
 
 channel_ops = {}
@@ -308,16 +317,12 @@ def process_kick(kicker, channel, nick, comment):
 
 def process_quit(nick, comment):
     for channel in channel_ops:
-        try:
+        if nick in channel:
             channel.remove(nick)
-        except ValueError:
-            pass
 
     for channel in channel_voices:
-        try:
+        if nick in channel:
             channel.remove(nick)
-        except ValueError:
-            pass
 
 def process_part(nick, channel):
     try:
@@ -333,7 +338,6 @@ def process_part(nick, channel):
 def process_name(name, channel):
     if channel not in channel_ops:
         channel_ops[channel] = []
-    
     if channel not in channel_voices:
         channel_voices[channel] = []
 
@@ -395,9 +399,7 @@ while True:
 
         tmp = irc.is_part(line)
         if tmp is not None:
-            for channel in tmp[1]:
-                process_part(tmp[0], channel)
-            continue
+            process_part(tmp[0], tmp[1])
 
         tmp = irc.is_mode(line)
         if tmp is not None:

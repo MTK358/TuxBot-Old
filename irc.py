@@ -62,8 +62,8 @@ class IrcClient:
             self.socket.send("NOTICE "+nick+" :"+line+"\r\n")
             first = False
 
-    def send_kick(self, channel, nick):
-        self.socket.send("KICK %s %s\r\n" % (channel, nick))
+    def send_kick(self, channel, nick, message = ""):
+        self.socket.send("KICK %s %s %s\r\n" % (channel, nick, message))
 
     def send_pong(self, message):
         self.socket.send("PONG :%s\r\n" % (message))
@@ -97,9 +97,9 @@ class IrcClient:
         return None
 
     def is_part(self, string):
-        match = re.match(r':([^!]+)[^\s]+ PART (.*)', string)
+        match = re.match(r':([^!]+)[^\s]+? PART ([^\s]+)( :(.+)|)$', string)
         if match:
-            return match.group(1), match.group(2).split(",")
+            return match.group(1), match.group(2), match.group(4)
         return None
 
     def is_mode(self, string):
