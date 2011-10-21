@@ -18,14 +18,16 @@
 Config File Syntax:
 
 You can configure which server, channel, nick, real name, quit message, and
-command prefixes TuxBot uses. You can have multiple command prefixes
-separated by double spaces, and multiple channels separated by spaces:
+command prefixes TuxBot uses, and senders which it ignores. You can have
+multiple command prefixes separated by double spaces, and multiple channels
+and ignores separated by spaces:
 
     nick TuxBot
     realname The #Linux Bot
-    channel #Linux #example
+    channel #Linux #freiwuppertal
     server irc.esper.net 6667
-    command-prefixes !  TuxBot *, *
+    command-prefixes !(.+)  [Tt]ux[Bb]ot *, *([^\s].*)
+    ignore *!*@services.esper.net example!*
     quitmessage Segmentation fault
 
 Help lines define answers to questions asked using the !help command. They
@@ -53,8 +55,13 @@ command when someone says "example":
 
     run-command-on-message example  help
 
-"help", "on-message", and "run-command-on-message" all replace "\s" with the
-nickname of the person TuxBot is replying to.
+There's also "on-command" and "run-command-on-command". They work just like
+"on-message" and "run-command-on-message", but they require the message to
+have a command prefix.
+
+"help", "on-message", "run-command-on-message", "on-command", and
+"run-command-on-command" all replace "\s" with the nickname of the person
+TuxBot is replying to.
 
 More of these might be added later.
 
@@ -104,6 +111,12 @@ class ConfigFile:
             return match.group(1).split(" ")
         return None
 
+    def get_ignores(self):
+        match = self._get_matching_line(re.compile('ignore (.+)$'))
+        if match:
+            return match.group(1).split(" ")
+        return None
+
     def get_server(self):
         match = self._get_matching_line(re.compile('server (.+) (.+)$'))
         if match:
@@ -126,8 +139,28 @@ class ConfigFile:
                 return re.sub(pattern, replacement, key)
         return None
 
-    def get_command_response(self, key):
+    def get_response_command(self, key):
         matches = self._get_all_matching_lines(re.compile('run-command-on-message (.+?)  (.+)'))
+        for match in matches:
+            pattern = match.group(1)
+            if re.match(pattern+"$", key):
+                replacement = match.group(2).split("  ")
+                replacement = replacement[random.randint(0, len(replacement) - 1)]
+                return re.sub(pattern, replacement, key)
+        return None
+
+    def get_command_response(self, key):
+        matches = self._get_all_matching_lines(re.compile('on-command (.+?)  (.+)'))
+        for match in matches:
+            pattern = match.group(1)
+            if re.match(pattern+"$", key):
+                replacement = match.group(2).split("  ")
+                replacement = replacement[random.randint(0, len(replacement) - 1)]
+                return re.sub(pattern, replacement, key)
+        return None
+
+    def get_command_response_command(self, key):
+        matches = self._get_all_matching_lines(re.compile('run-command-on-command (.+?)  (.+)'))
         for match in matches:
             pattern = match.group(1)
             if re.match(pattern+"$", key):

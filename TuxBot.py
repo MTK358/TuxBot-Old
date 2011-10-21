@@ -59,6 +59,10 @@ command_prefixes = config.get_command_prefixes()
 if not command_prefixes:
     print "Config file has no command-prefixes entry"
     sys.exit(1)
+ignore_patterns = config.get_ignores()
+for i in range(0, len(ignore_patterns)):
+    ignore_patterns[i] = re.sub(r'\\\*', ".*", re.escape(ignore_patterns[i]))
+
 
 pipe = os.popen('git log --pretty=format:"git commit %h (%s)"')
 version = pipe.readline().strip()
@@ -229,6 +233,15 @@ def process_command(line, sender, channel):
             sys.exit(0)
         return True
 
+    response = config.get_command_response(clean_string(line))
+    if response:
+        irc.send_message(response.replace("\\s", sender), channel)
+        return
+    response = config.get_command_response_command(clean_string(line))
+    if response:
+        process_command(response, sender, channel)
+        return
+
     return False
 
 def process_message(line, to, sender):
@@ -248,11 +261,16 @@ def process_message(line, to, sender):
         #PING        - Used to measure the delay of the IRC network between clients.
         return
     for command_prefix in command_prefixes:
-        if re.match(command_prefix, line) and process_command(line[len(command_prefix):], sender, to):
+        match = re.match(command_prefix, line)
+        if match and process_command(match.group(1), sender, to):
             return
     response = config.get_response(clean_string(line))
     if response:
         irc.send_message(response.replace("\\s", sender), to)
+        return
+    response = config.get_response_command(clean_string(line))
+    if response:
+        process_command(response, sender, to)
         return
 
 flood_data = {}
@@ -372,7 +390,14 @@ while True:
             continue
         print line
 
-        # respond to PING commands
+        sender = re.match(r':([^\s]+)\s', line)
+        if sender:
+            sender = sender.group(1)
+            ignore = False
+            for ignore_pattern in ignore_patterns:
+                if re.match(ignore_pattern, sender):
+                    ignore = True
+
         tmp = irc.is_ping(line)
         if tmp:
             irc.send_pong(tmp)
@@ -386,9 +411,8 @@ while True:
         if not joined:
             continue
 
-        # respond to posts on the channel
         tmp = irc.is_message(line)
-        if tmp is not None:
+        if not ignore and tmp is not None:
             process_message(tmp[2], tmp[1], tmp[0])
             flood_check(tmp[1], tmp[0], tmp[2])
             continue

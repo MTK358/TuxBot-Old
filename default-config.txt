@@ -2,9 +2,10 @@ nick TuxBot
 realname The #Linux Bot
 channel #Linux #freiwuppertal
 server irc.esper.net 6667
-command-prefixes !  TuxBot *, *
+command-prefixes !(.+)  [Tt]ux[Bb]ot *, *([^\s].*)
 quitmessage Segmentation fault
 
+ignore *!*@services.esper.net
 
 on-message hi( .+)?  hi! :)
 on-message .*(hi|hello|hey|good (morning|afternoon|evening|night))\s+tuxbot  \1 \s!
