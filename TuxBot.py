@@ -164,6 +164,12 @@ def process_command(line, sender, channel):
             irc.send_message(xkcd.get_url(int(l[random.randint(0, len(l)-1)])), channel)
         return True
 
+    # !google <criteria> -- get the URL for a Google search
+    match = re.match(r'google\s+([^\s].+)$', line)
+    if match:
+        irc.send_message("https://encrypted.google.com/#q=" + clean_string(match.group(1)).replace(" ", "+"), channel)
+        return True
+
     # !wikipedia -- get a random wikipedia article
     match = re.match(r'wikipedia$', line)
     if match:
