@@ -17,18 +17,7 @@
 
 from irc import IrcClient
 from configfile import ConfigFile
-import xkcd
-import man
-import re
-import sys
-import time
-import random
-import os
-import getpass
-import signal
-import datetime
-import select
-import time
+import datetime, getpass, man, os, random, re, select, signal, sys, time, xkcd
 
 if len(sys.argv) != 2:
     print "Usage: " + sys.argv[0] + " path/to/config/file"
