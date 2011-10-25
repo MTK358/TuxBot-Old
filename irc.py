@@ -18,13 +18,23 @@ import re, socket, time
 
 class IrcClient:
 
-    def __init__(self, server, port, nick, realname):
+    def __init__(self):
+        self.on_command_sent_callback = None
+
+    def set_on_command_sent_callback(self, callback):
+        self.on_command_sent_callback = callback
+
+    def send_line(self, line):
+        if self.on_command_sent_callback: self.on_command_sent_callback(line)
+        self.socket.send(line + "\r\n")
+
+    def connect(self, server, port, nick, realname):
         self.server = server
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((server, port))
         self.set_nick(nick)
-        self.socket.send("USER %s 8 * :%s\r\n" % (nick, realname))
+        self.send_line("USER %s 8 * :%s" % (nick, realname))
 
     def readline(self):
         line = ""
@@ -38,10 +48,10 @@ class IrcClient:
             pass
 
     def set_nick(self, nick):
-        self.socket.send("NICK %s\r\n" % (nick))
+        self.send_line("NICK %s" % (nick))
 
     def join(self, channel):
-        self.socket.send("JOIN %s\r\n" % (channel))
+        self.send_line("JOIN %s" % (channel))
         self.current_channel = channel
 
     def send_message(self, message, to):
@@ -49,7 +59,7 @@ class IrcClient:
         for line in message.split("\n"):
             if not first:
                 time.sleep(0.3)
-            self.socket.send("PRIVMSG "+to+" :"+line+"\r\n")
+            self.send_line("PRIVMSG " + to + " :" + line)
             first = False
 
     def send_private_notice(self, message, nick):
@@ -57,17 +67,17 @@ class IrcClient:
         for line in message.split("\n"):
             if not first:
                 time.sleep(0.3)
-            self.socket.send("NOTICE "+nick+" :"+line+"\r\n")
+            self.send_line("NOTICE " + nick + " :" + line)
             first = False
 
     def send_kick(self, channel, nick, message = ""):
-        self.socket.send("KICK %s %s %s\r\n" % (channel, nick, message))
+        self.send_line("KICK %s %s %s" % (channel, nick, message))
 
     def send_pong(self, message):
-        self.socket.send("PONG :%s\r\n" % (message))
+        self.send_line("PONG :%s" % (message))
 
     def quit(self, message = ""):
-        self.socket.send("QUIT :%s\r\n" % message)
+        self.send_line("QUIT :%s" % (message))
         self.socket.close()
 
     def is_message(self, string):
@@ -138,3 +148,4 @@ class ModeSet:
         self.mode = mode
         self.given = given
         self.nick = nick
+

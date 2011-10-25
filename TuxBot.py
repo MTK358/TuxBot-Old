@@ -360,14 +360,19 @@ def process_name(name, channel):
     elif name[:1] == "+":
         channel_voices[channel].append(name[1:])
 
-irc = IrcClient(server, port, nick, realname)
-joined = False
-
 def signal_handler(signal, frame):
     irc.quit(quitmessage)
     print ''
     sys.exit(0)
 signal.signal(signal.SIGINT, signal_handler)
+
+irc = IrcClient()
+joined = False
+def on_command_sent(line):
+    print "> " + line
+irc.set_on_command_sent_callback(on_command_sent)
+
+irc.connect(server, port, nick, realname)
 
 while True:
     s = select.select([irc.socket, sys.stdin], [], [])[0]
