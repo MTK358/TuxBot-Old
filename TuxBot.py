@@ -25,10 +25,11 @@ if len(sys.argv) != 2:
     sys.exit(1)
 config = ConfigFile(sys.argv[1])
 
-server, port = config.get_server()
-if not server:
+server_and_port = config.get_server()
+if not server_and_port:
     print "Config file has no server entry"
     sys.exit(1)
+server, port = server_and_port
 channels = config.get_channels()
 if not channels:
     print "Config file has no channel entry"
@@ -437,3 +438,4 @@ while True:
             for name in tmp[1:]:
                 process_name(name, tmp[0])
             continue
+
