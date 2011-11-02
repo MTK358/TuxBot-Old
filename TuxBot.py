@@ -278,7 +278,7 @@ def flood_check(channel, sender, message):
             del flood_data[i]
             continue
         # if this message was posted before by the same person less than the timeout period ago
-        if i == idstr and message == flood_data[idstr]["message"]:
+        if i == idstr and len(message) <= 5:
             found = True
             count = flood_data[idstr]["count"] + 1
             if count >= 5:
@@ -288,7 +288,7 @@ def flood_check(channel, sender, message):
                 flood_data[idstr]["count"] = count
                 flood_data[idstr]["time"] = time.time()
     if not found:
-        flood_data[idstr] = {"time": time.time(), "count": 1, "message": message}
+        flood_data[idstr] = {"time": time.time(), "count": 1}
 
 channel_ops = {}
 channel_voices = {}

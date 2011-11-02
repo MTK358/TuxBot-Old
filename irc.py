@@ -58,7 +58,7 @@ class IrcClient:
         first = True
         for line in message.split("\n"):
             if not first:
-                time.sleep(0.3)
+                time.sleep(1)
             self.send_line("PRIVMSG " + to + " :" + line)
             first = False
 
@@ -66,7 +66,7 @@ class IrcClient:
         first = True
         for line in message.split("\n"):
             if not first:
-                time.sleep(0.3)
+                time.sleep(1)
             self.send_line("NOTICE " + nick + " :" + line)
             first = False
 
