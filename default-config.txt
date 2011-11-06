@@ -21,11 +21,11 @@ on-message tuxgames  Games featuring Tux in the Ubuntu or PlayDeb repository: - 
 on-message cd (.*)  \s@TuxBot:~/\1$
 # cd is broken, I have tried a lot, but it still does not work. Where is the error? O.O
 on-message whoami  \s
-on-message rm .*  VirtualPenguinFileSystem is mounted as read-only.
+on-message (rm|del) .*  VirtualPenguinFileSystem is mounted as read-only.
 on-message mkdir .*  VirtualPenguinFileSystem is mounted as read-only.
-on-message (ls .*|ls)  myprivatedata.txt tuxbothelp.txt
-on-message (more|less|vi|vim|emacs) myprivatedatatxt  What did you expect to find here? =P
-# on-message (more|less|vi|vim|emacs) tuxbothelptxt  [do-command] !help
+on-message (ls .*|ls|dir .*|dir)  myprivatedata.txt tuxbothelp.txt
+on-message (more|less|vi|vim|emacs|edit) myprivatedatatxt  What did you expect to find here? =P
+# on-message (more|less|vi|vim|emacs|edit) tuxbothelptxt  [do-command] !help
 # damn, get this working please :/
 
 xkcd-linux 797
