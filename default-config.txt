@@ -25,6 +25,7 @@ on-message (rm|del) .*  VirtualPenguinFileSystem is mounted as read-only.
 on-message mkdir .*  VirtualPenguinFileSystem is mounted as read-only.
 on-message (ls .*|ls|dir .*|dir)  myprivatedata.txt tuxbothelp.txt
 on-message (more|less|vi|vim|emacs|edit) myprivatedatatxt  What did you expect to find here? =P
+on-message sudo .*  \s is not in the sudoers file.  This incident will be reported.
 # on-message (more|less|vi|vim|emacs|edit) tuxbothelptxt  [do-command] !help
 # damn, get this working please :/
 
