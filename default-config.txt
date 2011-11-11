@@ -12,11 +12,11 @@ on-message .*(hi|hello|hey|good (morning|afternoon|evening|night))\s+tuxbot  \1 
 on-message .*(i (hate|dont like) tuxbot|tuxbot is (stupid|dumb|useless)).*  Shut up!  Really? :(  Why?  You do not have to like me =P  You must be kidding! O.O
 on-message .*windows is.*better than.*  Windows is just stupid. ;)
 on-message .*(tuxbot how are you|how are you tuxbot)|(tuxbot how do you do|how do you do tuxbot).*  I'm fine.  I'm fine, thanks. ;)  Could be better... :/  I'm okay, thanks for asking! :D  I'm great! :DD
-on-message yesno .*  Yes.  No.  Yes, absolutely. :D  No, not really. ;)  Yes, why not?  No!!! O.O  Maybe...  I don't know. :/  Well, what do /you/ think?!  I am not authorized to answer to a question like this.
+on-command yesno .*  Yes.  No.  Yes, absolutely. :D  No, not really. ;)  Yes, why not?  No!!! O.O  Maybe...  I don't know. :/  Well, what do /you/ think?!  I am not authorized to answer to a question like this.
 on-message .*i wish you cold winds.*  May the ice bring you wisdom. :) 
 # ^play FreeDroidRPG to understand this^
 on-message .*\bcu\b.*  May the source be with you.
-on-message tuxgames  Games featuring Tux in the Ubuntu or PlayDeb repository: - ExtremeTuxRacer: Race down hills with Tux in 3D, using OpenGL. Needs a good graphics card. - FreeDroidRPG: A RPG about Tux saving the world from hostile robots. You can "hack" or just fight the robots. - SuperTux: A "Super Mario" clone using Tux instead of Mario and taking place somewhere in Antarctica - If you know more games, please tell one of the TuxBot developers about them.
+on-command tuxgames  Games featuring Tux in the Ubuntu or PlayDeb repository: - ExtremeTuxRacer: Race down hills with Tux in 3D, using OpenGL. Needs a good graphics card. - FreeDroidRPG: A RPG about Tux saving the world from hostile robots. You can "hack" or just fight the robots. - SuperTux: A "Super Mario" clone using Tux instead of Mario and taking place somewhere in Antarctica - If you know more games, please tell one of the TuxBot developers about them.
 # on-message .*need help with .*  [do-command] !help \2  |<-- not working yet
 on-message cd (.*)  \s@TuxBot:~/\1$
 # cd is broken, I have tried a lot, but it still does not work. Where is the error? O.O
@@ -26,7 +26,16 @@ on-message mkdir .*  VirtualPenguinFileSystem is mounted as read-only.
 on-message (ls .*|ls|dir .*|dir)  myprivatedata.txt tuxbothelp.txt
 on-message (more|less|vi|vim|emacs|edit) myprivatedatatxt  What did you expect to find here? =P
 on-message sudo .*  \s is not in the sudoers file.  This incident will be reported.
-on-message echo (.*)  \1
+on-command echo (.*)  \1
+on-command (taskkill|kill) (.*)  Process 66642 ("\1") could not be killed (owner:root).
+on-message killall (.*)  killall: No process found (are you root?).
+on-command kill (.*) (.*)  kill: Could not send (\2) signal to process (\1) (are you root?)
+on-message whereis (.*)  /usr/bin/\1
+on-command netstat  Using secure VPN connection. - You are not root. - Only root is able to view the stats.
+on-command (kate|gedit|gparted|partitionmanager|hedgewars|openttd|wesnoth|srb2|addanyguiprogramsyouknowplease) .*  4.2:X:error 666 ["No display devices found for this X screen."] -- enter "help 666" for more information.
+on-command help 666  Error 666: No display devices found for this X screen. - This error is caused by trying to run a GUI in a text console.
+
+# on-command ver  [do-command] !version
 # on-message (more|less|vi|vim|emacs|edit) tuxbothelptxt  [do-command] !help
 # damn, get this working please :/
 
