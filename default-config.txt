@@ -25,7 +25,7 @@ on-message (rm|del) .*  VirtualPenguinFileSystem is mounted as read-only.
 on-message mkdir .*  VirtualPenguinFileSystem is mounted as read-only.
 on-message (ls .*|ls|dir .*|dir)  myprivatedata.txt tuxbothelp.txt
 on-message (more|less|vi|vim|emacs|edit) myprivatedatatxt  What did you expect to find here? =P
-on-message sudo .*  \s is not in the sudoers file.  This incident will be reported.
+on-message sudo .*  \s is not in the sudoers file. This incident will be reported.
 on-command echo (.*)  \1
 on-command (taskkill|kill) (.*)  Process 66642 ("\1") could not be killed (owner:root).
 on-message killall (.*)  killall: No process found (are you root?).
