@@ -34,6 +34,7 @@ on-message whereis (.*)  /usr/bin/\1
 on-command netstat  Using secure VPN connection. - You are not root. - Only root is able to view the stats.
 on-command (kate|gedit|gparted|partitionmanager|hedgewars|openttd|wesnoth|srb2|addanyguiprogramsyouknowplease) .*  4.2:X:error 666 ["No display devices found for this X screen."] -- enter "help 666" for more information.
 on-command help 666  Error 666: No display devices found for this X screen. - This error is caused by trying to run a GUI in a text console.
+on-command ping (.*)  Please enter "/ping \1" instead of "!ping \1".
 
 # on-command ver  [do-command] !version
 # on-message (more|less|vi|vim|emacs|edit) tuxbothelptxt  [do-command] !help
