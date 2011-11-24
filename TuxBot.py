@@ -17,7 +17,7 @@
 
 from irc import IrcClient
 from configfile import ConfigFile
-import man, xkcd
+import man, xkcd, translator
 import datetime, getpass, os, random, re, select, signal, sys, time
 
 if len(sys.argv) != 2:
@@ -196,13 +196,19 @@ def process_command(line, sender, channel):
         irc.send_message(time.strftime(match.group(2)), channel)
         return True
 
+    # !translate <from> <to> <text> -- translate some text
+    match = re.match(r'translate\s+([^\s]+)\s+([^\s]+)\s+([^\s].*)', line)
+    if match:
+        irc.send_message(translator.translate(match.group(1), match.group(2), match.group(3)), channel)
+        return True;
+
     # !license or !authors or !credits -- display license information and the names of the people who made TuxBot
     match = re.match(r'credits|authors|license$', line)
     if match:
         irc.send_private_notice(license, sender)
         return True
 
-    #!user -- display the username which this python script is running under
+    # !user -- display the username which this python script is running under
     match = re.match(r'user$', line)
     if match:
         irc.send_message(getpass.getuser(), channel)
