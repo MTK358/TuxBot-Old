@@ -1,0 +1,56 @@
+nick TuxBot
+realname The #Linux Bot
+channel #Linux #freiwuppertal
+server irc.esper.net 6667
+command-prefixes !(.+)  [Tt]ux[Bb]ot *, *([^\s].*)
+quitmessage Segmentation fault
+
+ignore *!*@*services.esper.net
+
+#german translation by ToBeFree - this file is a SMALL version of the original config file, translated and made suitable for non-geek-channels.
+#example/default channel for this config file is #schachburg on EsperNet because it was translated for use in that channel.
+
+on-message hi( .+)?  hi! :)
+on-message .*(hi|hallo|hey|hai|(guten|gute) (morgen|mittag|abend|nacht))\s+tuxbot  \1 \s!
+on-message .*(ich (hasse) tuxbot|((ich (mag|finde)) tuxbot)|(tuxbot ist) ((blöd|unnötig|dumm|schlecht|unintelligent)| (stupid|dumb|useless)).*  Sei leise!  Wirklich? :(  Warum?  Du musst mich ja nicht mögen =P  Machst du Witze? O.O
+on-message .*windows ist.*besser als.*  Windows ist einfach nur blöd. ;)
+on-message .*(tuxbot wie (gehts|gehts dir|geht es dir)|wie (gehts|gehts dir|geht es dir) tuxbot)|(tuxbot (was geht ab|alles klar|alles im grünen bereich|alles ok)|(was geht ab|alles klar|alles im grünen bereich|alles ok) tuxbot).*  Mir gehts gut, lol  Alles in Ordnung bei mir. ;)  Es könnte besser sein... :/  Mir gehts gut, danke für die Nachfrage! :D  Mir geht es SUPER! :DD
+on-command (janein) .*  Ja.  Nein.  Ja, absolut. :D  Nein, nicht wirklich. ;)  Ja, warum nicht?  NEIN!!! O.O  Vielleicht...  Keine Ahnung. :/  Na, was glaubst /du/ denn?!  Ich habe nicht das Recht dazu, eine solche Frage ehrlich zu beantworten.
+on-message .*\b(bye|bis bald|tschüs|tschüss|auf wiedersehencu)\b.*  Bis bald! :-)  Auf Wiedersehen! :-)  Kommst du denn morgen wieder? :D  Man sieht sich!
+
+#Freak-Befehle / Geek commands. Disabled by default because geeks should use the english config file instead. This one is for "normal" people. lol...
+#on-message cd (.*)  \s@TuxBot:~/\1$
+#on-message whoami  \s
+#on-message (rm|del) .*  VirtualPenguinFileSystem is mounted as read-only.
+#on-message mkdir .*  VirtualPenguinFileSystem is mounted as read-only.
+#on-message (ls .*|ls|dir .*|dir)  myprivatedata.txt tuxbothelp.txt
+#on-message (more|less|vi|vim|emacs|edit) myprivatedatatxt  What did you expect to find here? =P
+#on-message sudo .*  \s is not in the sudoers file. This incident will be reported.
+#on-command echo (.*)  \1
+#on-command (taskkill|kill) (.*)  Process 66642 ("\1") could not be killed (owner:root).
+#on-message killall (.*)  killall: No process found (are you root?).
+#on-command kill (.*) (.*)  kill: Could not send (\2) signal to process (\1) (are you root?)
+#on-message whereis (.*)  /usr/bin/\1
+#on-command netstat  Using secure VPN connection. - You are not root. - Only root is able to view the stats.
+#on-command (kate|gedit|gparted|partitionmanager|hedgewars|openttd|wesnoth|srb2|addanyguiprogramsyouknowplease) .*  4.2:X:error 666 ["No display devices found for this X screen."] -- enter "help 666" for more information.
+#on-command help 666  Error 666: No display devices found for this X screen. - This error is caused by trying to run a GUI in a text console.
+on-command ping (.*)  Bitte benutze "/ping \1" statt "!ping \1".
+
+xkcd-linux 797
+xkcd-linux 619
+xkcd-linux 963
+xkcd-linux 838
+
+xkcd-geek 149
+xkcd-geek 571
+xkcd-geek 356
+xkcd-geek 530
+xkcd-geek 353
+xkcd-geek 293
+xkcd-geek 936
+xkcd-geek 457
+xkcd-geek 371
+xkcd-geek 916
+xkcd-geek 888
+xkcd-geek 285
+
