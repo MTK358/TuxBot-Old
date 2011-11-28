@@ -10,9 +10,7 @@ def translate(from_lang, to_lang, text):
     except IOError, e:
         return "(error: %s)" % (e)
 
-    html = response.read()
-
-    print html
+    html = response.read().decode("iso-8859-1").encode("utf8")
 
     match = re.search(r'<div id="result">(<div [^>]*>)?(.*?)</div>', html)
     if match:
