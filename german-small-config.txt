@@ -1,9 +1,9 @@
-nick TuxBot
-realname The #Linux Bot
-channel #Linux #freiwuppertal
+nick GermanTuxBot
+realname The german #Linux Bot für #freiwuppertal and #schachburg.
+channel #freiwuppertal #schachburg
 server irc.esper.net 6667
 command-prefixes !(.+)  [Tt]ux[Bb]ot *, *([^\s].*)
-quitmessage Segmentation fault
+quitmessage Speicherzugriffsfehler
 
 ignore *!*@*services.esper.net
 
