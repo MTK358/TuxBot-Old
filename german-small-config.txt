@@ -12,7 +12,7 @@ ignore *!*@*services.esper.net
 
 on-message hi( .+)?  hi! :)
 on-message .*(hi|hallo|hey|hai|(guten|gute) (morgen|mittag|abend|nacht))\s+tuxbot  \1 \s!
-on-message .*(ich (hasse) tuxbot|((ich (mag|finde)) tuxbot)|(tuxbot ist) ((blöd|unnötig|dumm|schlecht|unintelligent)| (stupid|dumb|useless)).*  Sei leise!  Wirklich? :(  Warum?  Du musst mich ja nicht mögen =P  Machst du Witze? O.O
+on-message .*(ich (hasse) tuxbot)|((ich (mag|finde)) tuxbot)|(tuxbot ist) ((blöd|unnötig|dumm|schlecht|unintelligent)| (stupid|dumb|useless)).*  Sei leise!  Wirklich? :(  Warum?  Du musst mich ja nicht mögen =P  Machst du Witze? O.O
 on-message .*windows ist.*besser als.*  Windows ist einfach nur blöd. ;)
 on-message .*(tuxbot wie (gehts|gehts dir|geht es dir)|wie (gehts|gehts dir|geht es dir) tuxbot)|(tuxbot (was geht ab|alles klar|alles im grünen bereich|alles ok)|(was geht ab|alles klar|alles im grünen bereich|alles ok) tuxbot).*  Mir gehts gut, lol  Alles in Ordnung bei mir. ;)  Es könnte besser sein... :/  Mir gehts gut, danke für die Nachfrage! :D  Mir geht es SUPER! :DD
 on-command (janein) .*  Ja.  Nein.  Ja, absolut. :D  Nein, nicht wirklich. ;)  Ja, warum nicht?  NEIN!!! O.O  Vielleicht...  Keine Ahnung. :/  Na, was glaubst /du/ denn?!  Ich habe nicht das Recht dazu, eine solche Frage ehrlich zu beantworten.
