@@ -299,7 +299,7 @@ def flood_check(channel, sender, message):
             else:
                 flood_data[idstr]["count"] = count
                 flood_data[idstr]["time"] = time.time()
-    if not found:
+    if not found and len(message) <= 5:
         flood_data[idstr] = {"time": time.time(), "count": 1}
 
 channel_ops = {}
