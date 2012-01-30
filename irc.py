@@ -16,6 +16,24 @@
 
 import re, socket, time
 
+class Hostmask:
+
+    def __init__(self, string):
+        match = re.match(r'.+!.+@.+$', string)
+        if match:
+            self.nick = match.group(1);
+            self.username = match.group(2);
+            self.host = match.group(3);
+        else if string[0] == "!": # special syntax for creating a hostmask with just a nick
+            self.nick = string[1:]
+            self.username = None
+            self.host = None
+        else
+            self.nick = None
+            self.username = None
+            self.host = string
+
+
 class IrcClient:
 
     def __init__(self):
@@ -79,6 +97,13 @@ class IrcClient:
     def quit(self, message = ""):
         self.send_line("QUIT :%s" % (message))
         self.socket.close()
+
+    def get_hostmask(self, string):
+        match = re.match(r':([^\s]+) ', string)
+        if (match)
+            return Hostmask(match.group(1));
+        else
+            return Hostmask("!%s" % self.nick);
 
     def is_message(self, string):
         match = re.match(r':([^!]+)[^\s]+ PRIVMSG ([^\s]+) :(.*)', string)
