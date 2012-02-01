@@ -55,7 +55,7 @@ class Command:
 
         # hostmask
         if match.group(2):
-            self.hostmask = Hostmask(match.group(1))
+            self.hostmask = Hostmask(match.group(2))
         else:
             self.hostmask = Hostmask("!%s" % client_nick)
 
@@ -103,6 +103,7 @@ class Mode:
             self.negative = True
             self.string = string[1:]
         else:
+            self.negative = False
             self.string = string
 
     # assumes that "self" is not negative
@@ -114,7 +115,10 @@ class Mode:
                     self.string = self.string[:index] + self.string[index+1:]
             else:
                 if not newmode.negative:
-                    self.string.append(newmode.string[i])
+                    self.string += newmode.string[i]
+    
+    def contains(self, char):
+        return self.string.find(char) != -1
 
 
 class MemberInfo:
@@ -123,6 +127,7 @@ class MemberInfo:
         self.hostmask = hostmask
         self.mode = mode
         
+
 class ChannelInfo:
 
     def __init__(self, name, mode = Mode("")):
@@ -164,6 +169,7 @@ class Client:
         self.socket.connect((server, port))
         self.send_line("NICK %s" % (nick))
         self.send_line("USER %s 8 * :%s" % ("TuxBot", realname))
+        self.nick = nick
 
     def read_command(self):
         line = ""
@@ -205,6 +211,7 @@ class Client:
 
     def get_channel_info(self, channel):
         for i in self.channelinfos:
+            print i.name
             if areIrcNamesEqual(channel, i.name):
                 return i
         
@@ -243,17 +250,17 @@ class Client:
                 pass
                 # XXX do something
             else:
-                for channel in self.channels:
-                    self._remove_channel_member(channel, com.hostmask.nick)
+                for channel in self.channelinfos:
+                    channel.remove_member(com.hostmask.nick)
 
         elif com.command == "MODE":
             if len(com.args) >= 3:
-                channel_info = self.get_channel_info(com.args[0]).get_member_info(com.args[2]).mode.change(Mode(com.args[2]))
+                channel_info = self.get_channel_info(com.args[0]).get_member(com.args[2]).mode.change(Mode(com.args[2]))
             elif areIrcNamesEqual(com.args[0], self.nick):
                 self.mode.change(Mode(com.args[1]))
 
         elif com.command == "353":
-            channelinfo = get_channel_info(com.args[2])
+            channelinfo = self.get_channel_info(com.args[2])
             for i in com.args[3].split(" "):
                 if i[0] == "@":
                     nick = i[1:]

@@ -25,7 +25,7 @@ def search_man_page(name):
 def get_man_page_synopsis(section, name):
     stream = None
     try:
-        stream = urllib.urlopen(get(section, name))
+        stream = urllib.urlopen(get_man_page(section, name))
         page = stream.read()
         match = re.match(r'.*<h2>Synopsis</h2>(.*)<h2>Description</h2>.*', page, flags = re.IGNORECASE | re.DOTALL)
         if not match:

@@ -70,9 +70,9 @@ def process_command_message(line, cmd):
     # !help -- get help about TuxBot's commads
     match = re.match(r'help$', line)
     if match:
-        irc.send_private_notice(commandref, sender)
-        if sender in channel_ops[channel] + channel_voices[channel]:
-            irc.send_private_notice(opcommandref, sender)
+        client.send_private_notice(commandref, cmd.hostmask.nick)
+        if client.get_channel_info(cmd.args[0]).get_member(cmd.hostmask.nick).mode.contains("o"):
+            client.send_private_notice(opcommandref, cmd.hostmask.nick)
         return True
 
     # !help <key> -- get help
@@ -81,40 +81,40 @@ def process_command_message(line, cmd):
         key = clean_string(match.group(1))
         text = config.get_help(key)
         if text:
-            irc.send_message("%s" % (text), channel)
+            client.send_message("%s" % (text), cmd.args[0])
         else:
-            irc.send_message("I don't have an answer for \"%s\"." % (key), channel)
+            client.send_message("I don't have an answer for \"%s\"." % (key), cmd.args[0])
         return True
 
     # !man <section> <name> -- get the URL to an online man page
     match = re.match(r'man\s+(\w+)\s+([-A-Za-z0-9_]+)$', line)
     if match:
-        irc.send_message(man.get(match.group(1), match.group(2)), channel)
+        client.send_message(misc.get_man_page(match.group(1), match.group(2)), cmd.args[0])
         return True
     # !synopsis <section> <name> -- print the "SYNOPSIS" section of the specified man page
     match = re.match(r'synopsis\s+(\w+)\s+(\w+)$', line)
     if match:
-        text = man.synopsis(match.group(1), match.group(2))
+        text = misc.get_man_page_synopsis(match.group(1), match.group(2))
         if not text:
-            irc.send_message("Failed to get man page for \"%s\" in section \"%s\"" % (match.group(2), match.group(1)), channel)
+            client.send_message("Failed to get man page for \"%s\" in section \"%s\"" % (match.group(2), match.group(1)), cmd.args[0])
             return True
-        irc.send_message(text, channel)
+        client.send_message(text, cmd.args[0])
         return True
     # !man <criteria> -- search for an online man page
     match = re.match(r'man\s+(\w+)$', line)
     if match:
-        irc.send_message(man.search(match.group(1)), channel)
+        client.send_message(misc.search_man_page(match.group(1)), cmd.args[0])
         return True
 
     # !xkcd -- get a random xkcd comic
     match = re.match(r'xkcd$', line)
     if match:
-        irc.send_message(xkcd.get_random(), channel)
+        client.send_message(misc.get_random_xkcd(), cmd.args[0])
         return True
     # !xkcd <index> -- get an xkcd comic by index
     match = re.match(r'xkcd\s+([0-9]+)$', line)
     if match:
-        irc.send_message(xkcd.get_url(int(match.group(1))), channel)
+        client.send_message(misc.get_xkcd_url(int(match.group(1))), cmd.args[0])
         return True
 
     # !xkcd-linux and !xkcd-geek -- get linux-related and geeky xkcd comics
@@ -122,118 +122,121 @@ def process_command_message(line, cmd):
     if match:
         l = config.get_linux_xkcds()
         if not l:
-            irc.send_message("No linux-related comics in list.", channel)
+            client.send_message("No linux-related comics in list.", cmd.args[0])
         else:
-            irc.send_message(xkcd.get_url(int(l[random.randint(0, len(l)-1)])), channel)
+            client.send_message(xkcd.get_url(int(l[random.randint(0, len(l)-1)])), cmd.args[0])
         return True
     match = re.match(r'xkcd-geek$', line)
     if match:
         l = config.get_geek_xkcds()
         if not l:
-            irc.send_message("No linux-related comics in list.", channel)
+            client.send_message("No linux-related comics in list.", cmd.args[0])
         else:
-            irc.send_message(xkcd.get_url(int(l[random.randint(0, len(l)-1)])), channel)
+            client.send_message(xkcd.get_url(int(l[random.randint(0, len(l)-1)])), cmd.args[0])
         return True
 
     # !google <criteria> -- get the URL for a Google search
     match = re.match(r'google\s+([^\s].+)$', line)
     if match:
-        irc.send_message("https://encrypted.google.com/#q=" + clean_string(match.group(1)).replace(" ", "+"), channel)
+        client.send_message("https://encrypted.google.com/#q=" + clean_string(match.group(1)).replace(" ", "+"), cmd.args[0])
         return True
 
     # !wikipedia -- get a random wikipedia article
     match = re.match(r'wikipedia$', line)
     if match:
-        irc.send_message("http://en.wikipedia.org/wiki/Special:Random", channel)
+        client.send_message("http://en.wikipedia.org/wiki/Special:Random", cmd.args[0])
         return True
     # !wikipedia <article> -- get a link to wikipedia article
     match = re.match(r'wikipedia\s+([^\s].+)$', line)
     if match:
-        irc.send_message("http://en.wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(1)).replace(" ", "+"), channel)
+        client.send_message("http://en.wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(1)).replace(" ", "+"), cmd.args[0])
         return True
     # !wikipedia-<lang> -- get a random wikipedia article in a certain language
     match = re.match(r'wikipedia-(\w+)$', line)
     if match:
-        irc.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Random", channel)
+        client.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Random", cmd.args[0])
         return True
     # !wikipedia-<lang> <article> -- get a link to wikipedia article in a certain language
     match = re.match(r'wikipedia-(\w+)\s+([^\s].+)$', line)
     if match:
-        irc.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(2)).replace(" ", "+"), channel)
+        client.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(2)).replace(" ", "+"), cmd.args[0])
         return True
 
     # !time and !date -- get the current time
     match = re.match(r'(time|date)$', line)
     if match:
-        irc.send_message(time.strftime("%A %Y-%m-%d %H:%M:%S %Z"), channel)
+        client.send_message(time.strftime("%A %Y-%m-%d %H:%M:%S %Z"), cmd.args[0])
         return True
     match = re.match(r'(time|date)\s+([^\s].*)$', line)
     if match:
-        irc.send_message(time.strftime(match.group(2)), channel)
+        client.send_message(time.strftime(match.group(2)), cmd.args[0])
         return True
 
     # !tr[anslate]-<fromlang> <text> -- translate some text to English
     match = re.match(r'tr(anslate)?-([a-z]+)\s+([^\s].*)', line)
     if match:
-        irc.send_message(translator.translate(match.group(2), "en", match.group(3)), channel)
+        client.send_message(misc.translate(match.group(2), "en", match.group(3)), cmd.args[0])
         return True;
 
     # !tr[anslate]-<fromlang>-<tolang> <text> -- translate some text
     match = re.match(r'tr(anslate)?-([a-z]+)-([a-z]+)\s+([^\s].*)', line)
     if match:
-        irc.send_message(translator.translate(match.group(2), match.group(3), match.group(4)), channel)
+        client.send_message(misc.translate(match.group(2), match.group(3), match.group(4)), cmd.args[0])
         return True;
 
     # !license or !authors or !credits -- display license information and the names of the people who made TuxBot
     match = re.match(r'credits|authors|license$', line)
     if match:
-        irc.send_private_notice(license, sender)
+        client.send_private_notice(license, sender)
         return True
 
     # !user -- display the username which this python script is running under
     match = re.match(r'user$', line)
     if match:
-        irc.send_message(getpass.getuser(), channel)
+        client.send_message(getpass.getuser(), cmd.args[0])
         return True
 
     # !version -- get TuxBot's version. Assumes that TuxBot is run from its git repository directory
     match = re.match(r'version$', line)
     if match:
-        irc.send_message(version, channel)
+        client.send_message(version, cmd.args[0])
         return True
 
     # !quit -- make TuxBot quit
     match = re.match(r'quit$', line)
     if match:
-        if sender not in channel_ops[channel] + channel_voices[channel]:
-            irc.send_message(sender + ": Permission denied. You must be +o or +v.", channel)
-        else:
-            irc.quit(quitmessage)
+        if client.get_channel_info(cmd.args[0]).get_member(cmd.hostmask.nick).mode.contains("o"):
+            client.quit(quitmessage)
             sys.exit(0)
+        else:
+            client.send_message(cmd.hostamsk.nick + ": Permission denied. You must be +o or +v.", cmd.args[0])
         return True
 
     response = config.get_command_response(clean_string(line))
     if response:
-        irc.send_message(response.replace("\\s", sender), channel)
+        client.send_message(response.replace("\\s", sender), cmd.args[0])
         return
     response = config.get_command_response_command(clean_string(line))
     if response:
-        process_command(response, sender, channel)
+        process_command(response, cmd)
         return
 
     return False
 
 
 def process_message(cmd):
-    for command_prefix in command_prefixes:
-        match = re.match(command_prefix, line)
-        if match and process_command_message(line[len(match.group(0)):], cmd):
+    for command_prefix in config.get_command_prefixes():
+        match = re.match(command_prefix, cmd.args[1])
+        if match and process_command_message(cmd.args[1][len(match.group(0)):], cmd):
             return
-    response = config.get_response(clean_string(line))
+    if cmd.args[1][0] == "!":
+        if process_command_message(cmd.args[1][1:], cmd):
+            return
+    response = config.get_response(clean_string(cmd.args[1]))
     if response:
         irc.send_message(response.replace("\\s", sender), to)
         return
-    response = config.get_response_command(clean_string(line))
+    response = config.get_response_command(clean_string(cmd.args[1]))
     if response:
         process_command(response, cmd)
         return
@@ -241,9 +244,13 @@ def process_message(cmd):
 
 flood_data = {}
 
-def flood_check(channel, sender, message):
+def flood_check(cmd):
+    sender = cmd.hostmask.nick
+    channel = cmd.args[0]
+    message = cmd.args[1]
+
     # don't respond to private messages
-    if channel == nick:
+    if channel == client.nick:
         return
     idstr = channel + " " + sender
     found = False
@@ -257,7 +264,7 @@ def flood_check(channel, sender, message):
             found = True
             count = flood_data[idstr]["count"] + 1
             if count >= 5:
-                irc.send_kick(channel, sender, "Flooding")
+                client.send_line("KICK %s %s :Flooding" % (channel, sender))
                 del flood_data[idstr]
             else:
                 flood_data[idstr]["count"] = count
@@ -267,8 +274,8 @@ def flood_check(channel, sender, message):
 
 
 def op_config_ops(channel, hostmask):
-    if not client.get_channel_info(channel).get_member_info(hostmask.nick).mode.contains("o"):
-        irc.send_command("MODE %s +o %s" % (channel, hostmask.nick));
+    if not client.get_channel_info(channel).get_member(hostmask.nick).mode.contains("o"):
+        client.send_line("MODE %s +o %s" % (channel, hostmask.nick));
 
 
 def process_mode(cmd):
@@ -319,7 +326,7 @@ while True:
             process_message(cmd)
             flood_check(cmd)
         elif cmd.command == "JOIN":
-            process_join(tmp[0], tmp[1])
+            process_join(cmd)
         elif cmd.command == "MODE":
             process_mode(cmd)
 
