@@ -63,7 +63,6 @@ def clean_string(string):
 
 
 def process_command_message(line, cmd):
-    print "fsdfsdfasdfads*****************", line
     # !help -- get help about TuxBot's commads
     match = re.match(r'help$', line)
     if match:

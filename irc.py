@@ -162,7 +162,6 @@ class Client:
 
     def connect(self, networkinfo):
         self.networkinfo = networkinfo
-        print networkinfo
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.networkinfo["server"], self.networkinfo["port"]))
@@ -215,7 +214,6 @@ class Client:
 
     def get_channel_info(self, channel):
         for i in self.channelinfos:
-            print i.name
             if areIrcNamesEqual(channel, i.name):
                 return i
         
