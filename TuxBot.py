@@ -58,148 +58,135 @@ GNU General Public License for more details.
 http://www.gnu.org/licenses/gpl-3.0.html'''
 
 
-server, port = config.get_server()
-nick = config.get_nick()
-realname = config.get_realname()
-
 def clean_string(string):
     return re.sub("\s+", " ", re.sub("[^-_\w\s]", "", string.lower()))
 
 
 def process_command_message(line, cmd):
+    print "fsdfsdfasdfads*****************", line
     # !help -- get help about TuxBot's commads
     match = re.match(r'help$', line)
     if match:
-        client.send_private_notice(commandref, cmd.hostmask.nick)
+        cmd.client.send_private_notice(commandref, cmd.hostmask.nick)
         if client.get_channel_info(cmd.args[0]).get_member(cmd.hostmask.nick).mode.contains("o"):
-            client.send_private_notice(opcommandref, cmd.hostmask.nick)
+            cmd.client.send_private_notice(opcommandref, cmd.hostmask.nick)
         return True
 
     # !help <key> -- get help
     match = re.match(r'help\s+(.*)$', line)
     if match:
-        key = clean_string(match.group(1))
-        text = config.get_help(key)
-        if text:
-            client.send_message("%s" % (text), cmd.args[0])
+        key = match.group(1)
+        if key in config.contents["help"]:
+            cmd.client.send_message(config.contents["help"][key], cmd.args[0])
         else:
-            client.send_message("I don't have an answer for \"%s\"." % (key), cmd.args[0])
+            cmd.client.send_message("I don't have an answer for \"%s\"." % (key), cmd.args[0])
         return True
 
     # !man <section> <name> -- get the URL to an online man page
     match = re.match(r'man\s+(\w+)\s+([-A-Za-z0-9_]+)$', line)
     if match:
-        client.send_message(misc.get_man_page(match.group(1), match.group(2)), cmd.args[0])
+        cmd.client.send_message(misc.get_man_page(match.group(1), match.group(2)), cmd.args[0])
         return True
     # !synopsis <section> <name> -- print the "SYNOPSIS" section of the specified man page
     match = re.match(r'synopsis\s+(\w+)\s+(\w+)$', line)
     if match:
         text = misc.get_man_page_synopsis(match.group(1), match.group(2))
         if not text:
-            client.send_message("Failed to get man page for \"%s\" in section \"%s\"" % (match.group(2), match.group(1)), cmd.args[0])
+            cmd.client.send_message("Failed to get man page for \"%s\" in section \"%s\"" % (match.group(2), match.group(1)), cmd.args[0])
             return True
-        client.send_message(text, cmd.args[0])
+        cmd.client.send_message(text, cmd.args[0])
         return True
     # !man <criteria> -- search for an online man page
     match = re.match(r'man\s+(\w+)$', line)
     if match:
-        client.send_message(misc.search_man_page(match.group(1)), cmd.args[0])
+        cmd.client.send_message(misc.search_man_page(match.group(1)), cmd.args[0])
         return True
 
     # !xkcd -- get a random xkcd comic
     match = re.match(r'xkcd$', line)
     if match:
-        client.send_message(misc.get_random_xkcd(), cmd.args[0])
+        cmd.client.send_message(misc.get_random_xkcd(), cmd.args[0])
         return True
     # !xkcd <index> -- get an xkcd comic by index
     match = re.match(r'xkcd\s+([0-9]+)$', line)
     if match:
-        client.send_message(misc.get_xkcd_url(int(match.group(1))), cmd.args[0])
+        cmd.client.send_message(misc.get_xkcd_url(int(match.group(1))), cmd.args[0])
         return True
 
     # !xkcd-linux and !xkcd-geek -- get linux-related and geeky xkcd comics
     match = re.match(r'xkcd-linux$', line)
     if match:
-        l = config.get_linux_xkcds()
-        if not l:
-            client.send_message("No linux-related comics in list.", cmd.args[0])
-        else:
-            client.send_message(xkcd.get_url(int(l[random.randint(0, len(l)-1)])), cmd.args[0])
-        return True
+        cmd.client.send_message(misc.get_xkcd_url(random.choice(config.contents["xkcd"]["linux"])), cmd.args[0])
     match = re.match(r'xkcd-geek$', line)
     if match:
-        l = config.get_geek_xkcds()
-        if not l:
-            client.send_message("No linux-related comics in list.", cmd.args[0])
-        else:
-            client.send_message(xkcd.get_url(int(l[random.randint(0, len(l)-1)])), cmd.args[0])
+        cmd.client.send_message(misc.get_xkcd_url(random.choice(config.contents["xkcd"]["geek"])), cmd.args[0])
         return True
 
     # !google <criteria> -- get the URL for a Google search
     match = re.match(r'google\s+([^\s].+)$', line)
     if match:
-        client.send_message("https://encrypted.google.com/#q=" + clean_string(match.group(1)).replace(" ", "+"), cmd.args[0])
+        cmd.client.send_message("https://encrypted.google.com/#q=" + clean_string(match.group(1)).replace(" ", "+"), cmd.args[0])
         return True
 
     # !wikipedia -- get a random wikipedia article
     match = re.match(r'wikipedia$', line)
     if match:
-        client.send_message("http://en.wikipedia.org/wiki/Special:Random", cmd.args[0])
+        cmd.client.send_message("http://en.wikipedia.org/wiki/Special:Random", cmd.args[0])
         return True
     # !wikipedia <article> -- get a link to wikipedia article
     match = re.match(r'wikipedia\s+([^\s].+)$', line)
     if match:
-        client.send_message("http://en.wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(1)).replace(" ", "+"), cmd.args[0])
+        cmd.client.send_message("http://en.wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(1)).replace(" ", "+"), cmd.args[0])
         return True
     # !wikipedia-<lang> -- get a random wikipedia article in a certain language
     match = re.match(r'wikipedia-(\w+)$', line)
     if match:
-        client.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Random", cmd.args[0])
+        cmd.client.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Random", cmd.args[0])
         return True
     # !wikipedia-<lang> <article> -- get a link to wikipedia article in a certain language
     match = re.match(r'wikipedia-(\w+)\s+([^\s].+)$', line)
     if match:
-        client.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(2)).replace(" ", "+"), cmd.args[0])
+        cmd.client.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(2)).replace(" ", "+"), cmd.args[0])
         return True
 
     # !time and !date -- get the current time
     match = re.match(r'(time|date)$', line)
     if match:
-        client.send_message(time.strftime("%A %Y-%m-%d %H:%M:%S %Z"), cmd.args[0])
+        cmd.client.send_message(time.strftime("%A %Y-%m-%d %H:%M:%S %Z"), cmd.args[0])
         return True
     match = re.match(r'(time|date)\s+([^\s].*)$', line)
     if match:
-        client.send_message(time.strftime(match.group(2)), cmd.args[0])
+        cmd.client.send_message(time.strftime(match.group(2)), cmd.args[0])
         return True
 
     # !tr[anslate]-<fromlang> <text> -- translate some text to English
     match = re.match(r'tr(anslate)?-([a-z]+)\s+([^\s].*)', line)
     if match:
-        client.send_message(misc.translate(match.group(2), "en", match.group(3)), cmd.args[0])
+        cmd.client.send_message(misc.translate(match.group(2), "en", match.group(3)), cmd.args[0])
         return True;
 
     # !tr[anslate]-<fromlang>-<tolang> <text> -- translate some text
     match = re.match(r'tr(anslate)?-([a-z]+)-([a-z]+)\s+([^\s].*)', line)
     if match:
-        client.send_message(misc.translate(match.group(2), match.group(3), match.group(4)), cmd.args[0])
+        cmd.client.send_message(misc.translate(match.group(2), match.group(3), match.group(4)), cmd.args[0])
         return True;
 
     # !license or !authors or !credits -- display license information and the names of the people who made TuxBot
     match = re.match(r'credits|authors|license$', line)
     if match:
-        client.send_private_notice(license, sender)
+        cmd.client.send_private_notice(license, sender)
         return True
 
     # !user -- display the username which this python script is running under
     match = re.match(r'user$', line)
     if match:
-        client.send_message(getpass.getuser(), cmd.args[0])
+        cmd.client.send_message(getpass.getuser(), cmd.args[0])
         return True
 
     # !version -- get TuxBot's version. Assumes that TuxBot is run from its git repository directory
     match = re.match(r'version$', line)
     if match:
-        client.send_message(version, cmd.args[0])
+        cmd.client.send_message(version, cmd.args[0])
         return True
 
     # !quit -- make TuxBot quit
@@ -209,37 +196,51 @@ def process_command_message(line, cmd):
             client.quit(quitmessage)
             sys.exit(0)
         else:
-            client.send_message(cmd.hostamsk.nick + ": Permission denied. You must be +o or +v.", cmd.args[0])
+            cmd.client.send_message(cmd.hostamsk.nick + ": Permission denied. You must be +o.", cmd.args[0])
         return True
 
-    response = config.get_command_response(clean_string(line))
-    if response:
-        client.send_message(response.replace("\\s", sender), cmd.args[0])
-        return
-    response = config.get_command_response_command(clean_string(line))
-    if response:
-        process_command(response, cmd)
-        return
+    match = re.match(r'reload-config$', line)
+    if match:
+        if cmd.client.get_channel_info(cmd.args[0]).get_member(cmd.hostmask.nick).mode.contains("o"):
+            config.reload()
+        else:
+            cmd.client.send_message(cmd.hostamsk.nick + ": Permission denied. You must be +o.", cmd.args[0])
+        return True
+
+    for i in config.contents["responses"]:
+        if i[0] == "command":
+            match = re.match(i[1] + "$", line)
+            if match:
+                run_action(i[2:], match, cmd)
+                return True
 
     return False
 
 
 def process_message(cmd):
-    for command_prefix in config.get_command_prefixes():
+    for command_prefix in config.contents["command-prefixes"]:
         match = re.match(command_prefix, cmd.args[1])
         if match and process_command_message(cmd.args[1][len(match.group(0)):], cmd):
             return
     if cmd.args[1][0] == "!":
         if process_command_message(cmd.args[1][1:], cmd):
             return
-    response = config.get_response(clean_string(cmd.args[1]))
-    if response:
-        irc.send_message(response.replace("\\s", sender), to)
-        return
-    response = config.get_response_command(clean_string(cmd.args[1]))
-    if response:
-        process_command(response, cmd)
-        return
+    for i in config.contents["responses"]:
+        if i[0] == "message":
+            match = re.match(i[1] + "$", cmd.args[1])
+            if match:
+                run_action(i[2:], match, cmd)
+                break
+
+
+def run_action(action, match, cmd):
+    if action[0] == "message":
+        if type(action[1]).__name__ == "list":
+            cmd.client.send_message(match.expand(random.choice(action[1])), cmd.args[0])
+        else:
+            cmd.client.send_message(match.expand(action[1]), cmd.args[0])
+    elif action[0] == "command":
+        process_command_message(match.expand(action[1]), cmd)
 
 
 flood_data = {}
@@ -250,7 +251,7 @@ def flood_check(cmd):
     message = cmd.args[1]
 
     # don't respond to private messages
-    if channel == client.nick:
+    if channel == cmd.client.nick:
         return
     idstr = channel + " " + sender
     found = False
@@ -273,18 +274,21 @@ def flood_check(cmd):
         flood_data[idstr] = {"time": time.time(), "count": 1}
 
 
-def op_config_ops(channel, hostmask):
-    if not client.get_channel_info(channel).get_member(hostmask.nick).mode.contains("o"):
+def op_config_ops(client, channel, hostmask):
+    member = client.get_channel_info(channel).get_member(hostmask.nick)
+    if not member: return
+
+    if not member.mode.contains("o"):
         client.send_line("MODE %s +o %s" % (channel, hostmask.nick));
 
 
 def process_mode(cmd):
     if len(cmd.args) >= 3:
-        op_config_ops(cmd.args[0], cmd.hostmask)
+        op_config_ops(cmd.client, cmd.args[0], cmd.hostmask)
 
 
 def process_join(cmd):
-    op_config_ops(cmd.args[0], cmd.hostmask)
+    op_config_ops(cmd.client, cmd.args[0], cmd.hostmask)
 
 
 def signal_handler(signal, frame):
@@ -294,33 +298,44 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-client = irc.Client()
-joined = False
-def on_command_sent(line):
-    print "> " + line
-client.set_on_command_sent_callback(on_command_sent)
+def on_command_sent(client, line):
+    print client.networkinfo["server"] + " > " + line
 
-client.connect(server, port, nick, realname)
+
+clients = []
+for i in config.get_networks():
+    j = irc.Client()
+    j.connect(i)
+    j.set_on_command_sent_callback(on_command_sent)
+    clients.append(j)
+
+inputstreams = [sys.stdin]
+for i in clients:
+    inputstreams.append(i.socket)
 
 while True:
-    s = select.select([client.socket, sys.stdin], [], [])[0]
+    s = select.select(inputstreams, [], [])[0]
+    
     if sys.stdin in s:
         client.send_line(sys.stdin.readline().strip() + "\r\n")
+        continue
 
-    if client.socket in s:
-        cmd = client.read_command()
+    for i in clients:
+        if i.socket not in s: continue
+
+        cmd = i.read_command()
         if not cmd.is_valid:
             continue
 
-        print cmd.line
+        print i.networkinfo["server"] + ": " + cmd.line
 
         sender = re.match(r'([^\s]+)', cmd.hostmask.string)
         if sender:
             sender = sender.group(1)
             ignore = False
-            #for ignore_pattern in config.get_ignores():
-                #if re.match(ignore_pattern, sender):
-                    #ignore = True
+            for ignore_pattern in i.networkinfo["ignore"]:
+                if re.match(ignore_pattern, sender):
+                    ignore = True
 
         if cmd.command == "PRIVMSG" and not ignore:
             process_message(cmd)

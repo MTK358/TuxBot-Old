@@ -42,8 +42,9 @@ class Hostmask:
 
 class Command:
 
-    def __init__(self, line, client_nick, time):
+    def __init__(self, line, time, client):
         self.line = line
+        self.client = client
 
         match = re.match(r'(:([^\s]+) )?([A-Za-z0-9]+)( .+)?$', line)
 
@@ -57,7 +58,7 @@ class Command:
         if match.group(2):
             self.hostmask = Hostmask(match.group(2))
         else:
-            self.hostmask = Hostmask("!%s" % client_nick)
+            self.hostmask = Hostmask("!%s" % client.nick)
 
         # command type
         self.command = match.group(3).upper()
@@ -151,25 +152,26 @@ class Client:
 
     def __init__(self):
         self.on_command_sent_callback = None
-        self.nick = ""
-        self.mode = Mode()
-        self.channelinfos = []
 
     def set_on_command_sent_callback(self, callback):
         self.on_command_sent_callback = callback
 
     def send_line(self, line):
-        if self.on_command_sent_callback: self.on_command_sent_callback(line)
+        if self.on_command_sent_callback: self.on_command_sent_callback(self, line)
         self.socket.send(line + "\r\n")
 
-    def connect(self, server, port, nick, realname):
-        self.server = server
-        self.port = port
+    def connect(self, networkinfo):
+        self.networkinfo = networkinfo
+        print networkinfo
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((server, port))
-        self.send_line("NICK %s" % (nick))
-        self.send_line("USER %s 8 * :%s" % ("TuxBot", realname))
-        self.nick = nick
+        self.socket.connect((self.networkinfo["server"], self.networkinfo["port"]))
+        self.send_line("NICK %s" % (self.networkinfo["identity"]["nick"]))
+        self.send_line("USER %s 8 * :%s" % (self.networkinfo["identity"]["username"], self.networkinfo["identity"]["realname"]))
+
+        self.nick = self.networkinfo["identity"]["nick"]
+        self.mode = Mode()
+        self.channelinfos = []
 
     def read_command(self):
         line = ""
@@ -179,7 +181,7 @@ class Client:
                 if len(line) >= 2 and line[-2:] == "\r\n":
                     break
             line = line.strip()
-            com = Command(line, time, self.nick)
+            com = Command(line, time, self)
             if com.is_valid:
                 self.process_incoming_command(com)
             return com
@@ -205,7 +207,9 @@ class Client:
     def send_kick(self, channel, nick, message = ""):
         self.send_line("KICK %s %s %s" % (channel, nick, message))
 
-    def quit(self, message = ""):
+    def quit(self, message = None):
+        if message == None:
+            message = self.networkinfo["identity"]["quitmessage"]
         self.send_line("QUIT :%s" % (message))
         self.socket.close()
 
@@ -243,7 +247,9 @@ class Client:
             if areIrcNamesEqual(com.hostmask.nick, self.nick):
                 self.nick = com.args[0]
             for channel in self.channelinfos:
-                channel.get_member(com.hostmask.nick).hostmask.nick = com.args[0]
+                member = channel.get_member(com.hostmask.nick)
+                if member:
+                    member.hostmask.nick = com.args[0]
             
         elif com.command == "QUIT":
             if areIrcNamesEqual(com.hostmask.nick, self.nick):
@@ -255,11 +261,13 @@ class Client:
 
         elif com.command == "MODE":
             if len(com.args) >= 3:
-                channel_info = self.get_channel_info(com.args[0]).get_member(com.args[2]).mode.change(Mode(com.args[2]))
+                member = self.get_channel_info(com.args[0]).get_member(com.args[2])
+                if member:
+                    member.mode.change(Mode(com.args[2]))
             elif areIrcNamesEqual(com.args[0], self.nick):
                 self.mode.change(Mode(com.args[1]))
 
-        elif com.command == "353":
+        elif com.command == "353": # NAMES reply
             channelinfo = self.get_channel_info(com.args[2])
             for i in com.args[3].split(" "):
                 if i[0] == "@":
@@ -272,6 +280,10 @@ class Client:
                     nick = i
                     mode = Mode()
                 channelinfo.members.append(MemberInfo(Hostmask("!%s" % (nick)), mode))
+
+        elif com.command == "001": # WELCOME reply
+            for i in self.networkinfo["autorun"]:
+                self.send_line(i)
 
         elif com.command == "PING":
             self.send_line("PONG :%s" % com.args[0])
