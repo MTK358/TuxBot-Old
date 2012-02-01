@@ -14,46 +14,15 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/gpl-3.0.html .
 
-
-from irc import IrcClient
+import irc
 from configfile import ConfigFile
-import man, xkcd, translator
+import misc
 import datetime, getpass, os, random, re, select, signal, sys, time
 
 if len(sys.argv) != 2:
     print "Usage: " + sys.argv[0] + " path/to/config/file"
     sys.exit(1)
 config = ConfigFile(sys.argv[1])
-
-server_and_port = config.get_server()
-if not server_and_port:
-    print "Config file has no server entry"
-    sys.exit(1)
-server, port = server_and_port
-channels = config.get_channels()
-if not channels:
-    print "Config file has no channel entry"
-    sys.exit(1)
-nick = config.get_nick()
-if not nick:
-    print "Config file has no nick entry"
-    sys.exit(1)
-realname = config.get_realname()
-if not realname:
-    print "Config file has no realname entry"
-    sys.exit(1)
-quitmessage = config.get_quitmessage()
-if not quitmessage:
-    print "Config file has no quitmessage entry"
-    sys.exit(1)
-command_prefixes = config.get_command_prefixes()
-if not command_prefixes:
-    print "Config file has no command-prefixes entry"
-    sys.exit(1)
-ignore_patterns = config.get_ignores()
-for i in range(0, len(ignore_patterns)):
-    ignore_patterns[i] = re.sub(r'\\\*', ".*", re.escape(ignore_patterns[i]))
-
 
 pipe = os.popen('git log --pretty=format:"git commit %h (%s)"')
 version = pipe.readline().strip()
@@ -72,7 +41,8 @@ commandref = '''!help <key> -- get help about <key>
 (Note: you can use "date" instead of "time" in the above two commands)
 !license or !credits or !authors -- view the license information and the names of the people who made TuxBot.'''
 
-opcommandref = '''!quit -- make TuxBot quit'''
+opcommandref = '''!quit -- make TuxBot quit
+!reload-config -- reload the comfiguration file'''
 
 license = '''Copyright (C) 2011 Colson, LinuxUser324, Krenair and Tobias "ToBeFree" Frei.
 This program is free software: you can redistribute it and/or modify
@@ -87,10 +57,16 @@ GNU General Public License for more details.
 ---
 http://www.gnu.org/licenses/gpl-3.0.html'''
 
+
+server, port = config.get_server()
+nick = config.get_nick()
+realname = config.get_realname()
+
 def clean_string(string):
     return re.sub("\s+", " ", re.sub("[^-_\w\s]", "", string.lower()))
 
-def process_command(line, sender, channel):
+
+def process_command_message(line, cmd):
     # !help -- get help about TuxBot's commads
     match = re.match(r'help$', line)
     if match:
@@ -107,7 +83,7 @@ def process_command(line, sender, channel):
         if text:
             irc.send_message("%s" % (text), channel)
         else:
-            irc.send_message("I don't have an answer for \"%s\". You can set it using the \"!sethelp question: answer\" command." % (key), channel)
+            irc.send_message("I don't have an answer for \"%s\"." % (key), channel)
         return True
 
     # !man <section> <name> -- get the URL to an online man page
@@ -247,25 +223,11 @@ def process_command(line, sender, channel):
 
     return False
 
-def process_message(line, to, sender):
-    line = line.strip()
-    if to == nick:
-        #private message
-        if line == "VERSION":
-            irc.send_private_notice("VERSION " + version + "", sender)
-        elif line == "TIME":
-            irc.send_private_notice("TIME " + datetime.datetime.now().strftime("%a %b %d %H:%M:%S") + "", sender)
-        #elif line
-        #FINGER        - Returns the user's full name, and idle time.
-        #SOURCE        - Where to obtain a copy of a client.
-        #USERINFO    - A string set by the user (never the client coder)
-        #CLIENTINFO    - Dynamic master index of what a client knows.
-        #ERRMSG        - Used when an error needs to be replied with.
-        #PING        - Used to measure the delay of the IRC network between clients.
-        return
+
+def process_message(cmd):
     for command_prefix in command_prefixes:
         match = re.match(command_prefix, line)
-        if match and process_command(match.group(1), sender, to):
+        if match and process_command_message(line[len(match.group(0)):], cmd):
             return
     response = config.get_response(clean_string(line))
     if response:
@@ -273,8 +235,9 @@ def process_message(line, to, sender):
         return
     response = config.get_response_command(clean_string(line))
     if response:
-        process_command(response, sender, to)
+        process_command(response, cmd)
         return
+
 
 flood_data = {}
 
@@ -302,152 +265,62 @@ def flood_check(channel, sender, message):
     if not found and len(message) <= 5:
         flood_data[idstr] = {"time": time.time(), "count": 1}
 
-channel_ops = {}
-channel_voices = {}
 
-def process_mode(modeset):
-    try:
-        if modeset.to[0] == "#":
-            channel = modeset.to
-        else:
-            return
+def op_config_ops(channel, hostmask):
+    if not client.get_channel_info(channel).get_member_info(hostmask.nick).mode.contains("o"):
+        irc.send_command("MODE %s +o %s" % (channel, hostmask.nick));
 
-        if channel_ops[channel] == None:
-            channel_ops[channel] = []
-        elif channel_voices[channel] == None:
-            channel_voices[channel] = []
 
-        if modeset.mode is "o" and modeset.given:
-            channel_ops[channel].append(modeset.nick)
-        elif modeset.mode is "o" and not modeset.given:
-            channel_ops[channel].remove(modeset.nick)
-        elif modeset.mode is "v" and modeset.given:
-            channel_voices[channel].append(modeset.nick)
-        elif modeset.mode is "v" and not modeset.given:
-            channel_voices[channel].remove(modeset.nick)
-    except KeyError:
-        pass
-    except ValueError:
-        pass
-    #modeset: setter, to, mode, given[, nick]
+def process_mode(cmd):
+    if len(cmd.args) >= 3:
+        op_config_ops(cmd.args[0], cmd.hostmask)
 
-def process_kick(kicker, channel, nick, comment):
-    try:
-        channel_ops[channel].remove(nick)
-    except ValueError:
-        pass
 
-    try:
-        channel_voices[channel].remove(nick)
-    except ValueError:
-        pass
+def process_join(cmd):
+    op_config_ops(cmd.args[0], cmd.hostmask)
 
-def process_quit(nick, comment):
-    for channel in channel_ops:
-        if nick in channel:
-            channel.remove(nick)
-
-    for channel in channel_voices:
-        if nick in channel:
-            channel.remove(nick)
-
-def process_part(nick, channel):
-    try:
-        channel_ops[channel].remove(nick)
-    except ValueError:
-        pass
-
-    try:
-        channel_voices[channel].remove(nick)
-    except ValueError:
-        pass
-
-def process_name(name, channel):
-    if channel not in channel_ops:
-        channel_ops[channel] = []
-    if channel not in channel_voices:
-        channel_voices[channel] = []
-
-    if name[:1] == '@':
-        channel_ops[channel].append(name[1:])
-    elif name[:1] == "+":
-        channel_voices[channel].append(name[1:])
 
 def signal_handler(signal, frame):
-    irc.quit(quitmessage)
+    client.quit(config.get_quitmessage())
     print ''
     sys.exit(0)
 signal.signal(signal.SIGINT, signal_handler)
 
-irc = IrcClient()
+
+client = irc.Client()
 joined = False
 def on_command_sent(line):
     print "> " + line
-irc.set_on_command_sent_callback(on_command_sent)
+client.set_on_command_sent_callback(on_command_sent)
 
-irc.connect(server, port, nick, realname)
+client.connect(server, port, nick, realname)
 
 while True:
-    s = select.select([irc.socket, sys.stdin], [], [])[0]
+    s = select.select([client.socket, sys.stdin], [], [])[0]
     if sys.stdin in s:
-        irc.socket.send(sys.stdin.readline().strip() + "\r\n")
+        client.send_line(sys.stdin.readline().strip() + "\r\n")
 
-    if irc.socket in s:
-        line = irc.readline()
-        if line is "" or line is None:
+    if client.socket in s:
+        cmd = client.read_command()
+        if not cmd.is_valid:
             continue
-        print line
 
-        sender = re.match(r':([^\s]+)\s', line)
+        print cmd.line
+
+        sender = re.match(r'([^\s]+)', cmd.hostmask.string)
         if sender:
             sender = sender.group(1)
             ignore = False
-            for ignore_pattern in ignore_patterns:
-                if re.match(ignore_pattern, sender):
-                    ignore = True
+            #for ignore_pattern in config.get_ignores():
+                #if re.match(ignore_pattern, sender):
+                    #ignore = True
 
-        tmp = irc.is_ping(line)
-        if tmp:
-            irc.send_pong(tmp)
-            continue
+        if cmd.command == "PRIVMSG" and not ignore:
+            process_message(cmd)
+            flood_check(cmd)
+        elif cmd.command == "JOIN":
+            process_join(tmp[0], tmp[1])
+        elif cmd.command == "MODE":
+            process_mode(cmd)
 
-        if not joined and line == ":"+nick+" MODE "+nick+" :+i":
-            for channel in channels:
-                irc.join(channel)
-            joined = True
-
-        if not joined:
-            continue
-
-        tmp = irc.is_message(line)
-        if not ignore and tmp is not None:
-            process_message(tmp[2], tmp[1], tmp[0])
-            flood_check(tmp[1], tmp[0], tmp[2])
-            continue
-
-        tmp = irc.is_quit(line)
-        if tmp is not None:
-            process_quit(tmp[0], tmp[1])
-            continue
-
-        tmp = irc.is_kick(line)
-        if tmp is not None:
-            process_kick(tmp[0], tmp[1], tmp[2], tmp[3])
-            continue
-
-        tmp = irc.is_part(line)
-        if tmp is not None:
-            process_part(tmp[0], tmp[1])
-
-        tmp = irc.is_mode(line)
-        if tmp is not None:
-            for i in tmp:
-                process_mode(i)
-            continue
-
-        tmp = irc.is_names(line)
-        if tmp is not None:
-            for name in tmp[1:]:
-                process_name(name, tmp[0])
-            continue
 

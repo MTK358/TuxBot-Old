@@ -1,4 +1,4 @@
-nick TuxBot
+nick TuxBot|Test
 realname The #Linux Bot
 channel #Linux #freiwuppertal
 server irc.esper.net 6667
@@ -37,6 +37,17 @@ on-command ping (.*)  Please enter "/ping \1" instead of "!ping \1".
 # on-command ver  [do-command] !version
 # on-message (more|less|vi|vim|emacs|edit) tuxbothelptxt  [do-command] !help
 # damn, get this working please :/
+
+
+# OKAY, HERE IS AN EXAMPLE THAT SHOULD WORK - I CAN'T GET IT TO WORK :( ~ ToBeFree
+config-autoop ToBeFree!*@*arcor*net
+config-autoop *!*@nc-71-2-81-195.dhcp.embarqhsd.net
+# Opping based on hostnames is not a good idea, what if your ISP gives your address to another person? Then TuxBot won't op you and the other person will be auto-opped. NickServ identify-style registration is probably the only good way to do this. ~ LinuxUser324
+
+# end of example
+
+
+
 
 xkcd-linux 797
 xkcd-linux 619

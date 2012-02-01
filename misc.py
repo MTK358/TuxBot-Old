@@ -14,16 +14,15 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/gpl-3.0.html .
 
-import urllib
-import re
+import re, urllib
 
-def get(section, name):
+def get_man_page(section, name):
     return "http://linux.die.net/man/%s/%s" % (section, name)
 
-def search(name):
+def search_man_page(name):
     return "http://duckduckgo.com/?q=site%3Alinux.die.net+" + name
 
-def synopsis(section, name):
+def get_man_page_synopsis(section, name):
     stream = None
     try:
         stream = urllib.urlopen(get(section, name))
@@ -43,4 +42,30 @@ def synopsis(section, name):
     finally:
         if stream:
             stream.close()
+
+def get_xkcd_url(index):
+    return "https://www.xkcd.com/%d/" % (index)
+
+def get_random_xkcd():
+    return "http://dynamic.xkcd.com/random/comic/"
+
+def translate(from_lang, to_lang, text):
+    params = urllib.urlencode({"babelfishfrontpage": "yes",
+                               "doit": "done",
+                               "urltext": text,
+                               "lp": from_lang + "_" + to_lang})
+    try:
+        response = urllib.urlopen("http://babelfish.yahoo.com/translate_txt", params)
+    except ioerror, e:
+        return "(error: %s)" % (e)
+
+    html = response.read().decode("iso-8859-1").encode("utf8")
+
+    match = re.search(r'<div id="result">(<div [^>]*>)?(.*?)</div>', html)
+    if match:
+        return match.group(2)
+
+    response.close()
+
+    return "(error: could not extract translated text from response)"
 

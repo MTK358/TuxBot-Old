@@ -86,6 +86,23 @@ class ConfigFile:
     
     def __init__(self, path):
         self.path = path
+        self.reload()
+
+    def reload(self):
+        self._contents = []
+        f = None
+        try:
+            f = open(self.path, "r")
+            while True:
+                line = f.readline();
+                if not line: break
+                self._contents.append(line.strip())
+        except:
+            return False
+        finally:
+            if f:
+                f.close()
+        return True
 
     def get_nick(self):
         match = self._get_matching_line(re.compile('nick (.+)$'))
@@ -195,40 +212,66 @@ class ConfigFile:
         for match in matches:
             l.append(match.group(2))
         return l
+        
+    def get_config_ops(self, channel):
+        matches = self._get_all_matching_lines(re.compile('(auto)?op %s (.*)$' % re.escape(channel)))
+        if matches == None:
+            return None;
+        l = []
+        for match in matches:
+            l.append(match.group(1))
+        return l
     
+    def get_config_autoops(self, channel):
+        matches = self._get_all_matching_lines(re.compile('autoop %s (.*)$' % re.escape(channel)))
+        if matches == None:
+            return None;
+        l = []
+        for match in matches:
+            l.append(match.group(1))
+        return l
+    
+    def get_config_voices(self):
+        matches = self._get_all_matching_lines(re.compile('(auto)?voice (.*)$'))
+        if matches == None:
+            return None;
+        l = []
+        for match in matches:
+            l.append(match.group(1))
+        return l    
+        
+    def get_config_autovoices(self):
+        matches = self._get_all_matching_lines(re.compile('autovoice (.*)$'))
+        if matches == None:
+            return None;
+        l = []
+        for match in matches:
+            l.append(match.group(1))
+        return l
+
+    # Non-auto-exempts are not needed in a bot. Those are set by ops - so there are only autoexempts here, but no exempts.
+    def get_config_autoexempts(self):
+        matches = self._get_all_matching_lines(re.compile('autoexempt (.*)$'))
+        if matches == None:
+            return None;
+        l = []
+        for match in matches:
+            l.append(match.group(1))
+        return l
+        
     def _get_matching_line(self, pattern):
-        f = None
-        try:
-            f = open(self.path, "r")
-            while True:
-                line = f.readline()
-                if len(line) == 0:
-                    break
-                match = pattern.match(line)
-                if match:
-                    return match
-        except:
-            return None
-        finally:
-            if f:
-                f.close()
+        for line in self._contents:
+            match = pattern.match(line)
+            if match:
+                return match
+        return None
         
     def _get_all_matching_lines(self, pattern):
         l = []
-        f = None
-        try:
-            f = open(self.path, "r")
-            while True:
-                line = f.readline()
-                if len(line) == 0:
-                    break
-                match = pattern.match(line)
-                if match:
-                    l.append(match)
-            return l
-        except:
-            return None
-        finally:
-            if f:
-                f.close()
+        for line in self._contents:
+            match = pattern.match(line)
+            if match:
+                l.append(match)
+        return l
+
 
