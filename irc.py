@@ -83,7 +83,7 @@ class Command:
             else:
                 self.command = "CTCPREPLY"
 
-            self.args[1] = self.args[1:-2]
+            self.args[1] = self.args[1][1:-2]
 
             index = self.args[1].find(" ")
             if index != -1:
@@ -168,8 +168,8 @@ class Client:
             self.socket = ssl.wrap_socket(self.socket)
 
         self.socket.connect((self.networkinfo["server"], self.networkinfo["port"]))
-        self.send_line("NICK %s" % (self.networkinfo["identity"]["nick"]))
-        self.send_line("USER %s 8 * :%s" % (self.networkinfo["identity"]["username"], self.networkinfo["identity"]["realname"]))
+        self.send_line(u"NICK %s" % (self.networkinfo["identity"]["nick"]))
+        self.send_line(u"USER %s 8 * :%s" % (self.networkinfo["identity"]["username"], self.networkinfo["identity"]["realname"]))
 
         self.nick = self.networkinfo["identity"]["nick"]
         self.mode = Mode()
@@ -195,7 +195,7 @@ class Client:
         for line in message.split("\n"):
             if not first:
                 time.sleep(1)
-            self.send_line("PRIVMSG " + to + " :" + line)
+            self.send_line(u"PRIVMSG " + to + " :" + line)
             first = False
 
     def send_notice(self, message, nick):
@@ -203,16 +203,16 @@ class Client:
         for line in message.split("\n"):
             if not first:
                 time.sleep(1)
-            self.send_line("NOTICE " + nick + " :" + line)
+            self.send_line(u"NOTICE " + nick + " :" + line)
             first = False
 
     def send_kick(self, channel, nick, message = ""):
-        self.send_line("KICK %s %s %s" % (channel, nick, message))
+        self.send_line(u"KICK %s %s %s" % (channel, nick, message))
 
     def quit(self, message = None):
         if message == None:
             message = self.networkinfo["identity"]["quitmessage"]
-        self.send_line("QUIT :%s" % (message))
+        self.send_line(u"QUIT :%s" % (message))
         self.socket.close()
 
     def get_channel_info(self, channel):
@@ -287,6 +287,5 @@ class Client:
                 self.send_line(i)
 
         elif com.command == "PING":
-            self.send_line("PONG :%s" % com.args[0])
+            self.send_line(u"PONG :%s" % com.args[0])
             
-

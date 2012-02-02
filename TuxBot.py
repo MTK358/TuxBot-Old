@@ -16,6 +16,7 @@
 
 import irc
 from configfile import ConfigFile
+from consoleserver import ConsoleServer
 import misc
 import datetime, getpass, os, random, re, select, signal, sys, time
 
@@ -28,7 +29,7 @@ pipe = os.popen('git log --pretty=format:"git commit %h (%s)"')
 version = pipe.readline().strip()
 pipe.close()
 
-commandref = '''!help <key> -- get help about <key>
+commandref = u'''!help <key> -- get help about <key>
 !man <section> <name> -- get the URL to an online man page
 !synopsis <section> <name> -- get the SYNOPSIS section of the specified man page
 !man <criteria> -- search for an online man page
@@ -41,10 +42,10 @@ commandref = '''!help <key> -- get help about <key>
 (Note: you can use "date" instead of "time" in the above two commands)
 !license or !credits or !authors -- view the license information and the names of the people who made TuxBot.'''
 
-opcommandref = '''!quit -- make TuxBot quit
+opcommandref = u'''!quit -- make TuxBot quit
 !reload-config -- reload the comfiguration file'''
 
-license = '''Copyright (C) 2011 Colson, LinuxUser324, Krenair and Tobias "ToBeFree" Frei.
+license = u'''Copyright (C) 2011 Colson, LinuxUser324, Krenair and Tobias "ToBeFree" Frei.
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -78,7 +79,7 @@ def process_command_message(line, cmd):
         if key in config.contents["help"]:
             cmd.client.send_message(config.contents["help"][key], cmd.args[0])
         else:
-            cmd.client.send_message("I don't have an answer for \"%s\"." % (key), cmd.args[0])
+            cmd.client.send_message(u"I don't have an answer for \"%s\"." % (key), cmd.args[0])
         return True
 
     # !man <section> <name> -- get the URL to an online man page
@@ -91,7 +92,7 @@ def process_command_message(line, cmd):
     if match:
         text = misc.get_man_page_synopsis(match.group(1), match.group(2))
         if not text:
-            cmd.client.send_message("Failed to get man page for \"%s\" in section \"%s\"" % (match.group(2), match.group(1)), cmd.args[0])
+            cmd.client.send_message(u"Failed to get man page for \"%s\" in section \"%s\"" % (match.group(2), match.group(1)), cmd.args[0])
             return True
         cmd.client.send_message(text, cmd.args[0])
         return True
@@ -124,28 +125,28 @@ def process_command_message(line, cmd):
     # !google <criteria> -- get the URL for a Google search
     match = re.match(r'google\s+([^\s].+)$', line)
     if match:
-        cmd.client.send_message("https://encrypted.google.com/#q=" + clean_string(match.group(1)).replace(" ", "+"), cmd.args[0])
+        cmd.client.send_message(u"https://encrypted.google.com/#q=" + clean_string(match.group(1)).replace(" ", "+"), cmd.args[0])
         return True
 
     # !wikipedia -- get a random wikipedia article
     match = re.match(r'wikipedia$', line)
     if match:
-        cmd.client.send_message("http://en.wikipedia.org/wiki/Special:Random", cmd.args[0])
+        cmd.client.send_message(u"http://en.wikipedia.org/wiki/Special:Random", cmd.args[0])
         return True
     # !wikipedia <article> -- get a link to wikipedia article
     match = re.match(r'wikipedia\s+([^\s].+)$', line)
     if match:
-        cmd.client.send_message("http://en.wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(1)).replace(" ", "+"), cmd.args[0])
+        cmd.client.send_message(u"http://en.wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(1)).replace(" ", "+"), cmd.args[0])
         return True
     # !wikipedia-<lang> -- get a random wikipedia article in a certain language
     match = re.match(r'wikipedia-(\w+)$', line)
     if match:
-        cmd.client.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Random", cmd.args[0])
+        cmd.client.send_message(u"http://"+match.group(1)+".wikipedia.org/wiki/Special:Random", cmd.args[0])
         return True
     # !wikipedia-<lang> <article> -- get a link to wikipedia article in a certain language
     match = re.match(r'wikipedia-(\w+)\s+([^\s].+)$', line)
     if match:
-        cmd.client.send_message("http://"+match.group(1)+".wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(2)).replace(" ", "+"), cmd.args[0])
+        cmd.client.send_message(u"http://"+match.group(1)+".wikipedia.org/wiki/Special:Search?search=" + clean_string(match.group(2)).replace(" ", "+"), cmd.args[0])
         return True
 
     # !time and !date -- get the current time
@@ -299,17 +300,26 @@ def on_command_sent(client, line):
     print client.networkinfo["server"] + " < " + line
 
 def on_quit():
+    for i in clientconsoles:
+        i.close()
     for i in clients:
         i.quit()
-    print ''
     sys.exit(0)
 
+def console_line_received_callback(console, line):
+    clients[clientconsoles.index(console)].send_line(line)
+
 clients = []
+clientconsoles = []
 for i in config.get_networks():
     j = irc.Client()
     j.connect(i)
     j.set_on_command_sent_callback(on_command_sent)
     clients.append(j)
+    k = ConsoleServer(j.networkinfo["consoleport"])
+    k.set_line_received_callback(console_line_received_callback)
+    clientconsoles.append(k)
+    k.start()
 
 inputstreams = [sys.stdin]
 for i in clients:
@@ -334,6 +344,7 @@ try:
                 continue
 
             print i.networkinfo["server"] + " > " + cmd.line
+            clientconsoles[clients.index(i)].send_line(cmd.line)
 
             sender = re.match(r'([^\s]+)', cmd.hostmask.string)
             if sender:
