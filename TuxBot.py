@@ -67,7 +67,7 @@ def process_command_message(line, cmd):
     match = re.match(r'help$', line)
     if match:
         cmd.client.send_private_notice(commandref, cmd.hostmask.nick)
-        if client.get_channel_info(cmd.args[0]).get_member(cmd.hostmask.nick).mode.contains("o"):
+        if cmd.client.get_channel_info(cmd.args[0]).get_member(cmd.hostmask.nick).mode.contains("o"):
             cmd.client.send_private_notice(opcommandref, cmd.hostmask.nick)
         return True
 
@@ -191,8 +191,8 @@ def process_command_message(line, cmd):
     # !quit -- make TuxBot quit
     match = re.match(r'quit$', line)
     if match:
-        if client.get_channel_info(cmd.args[0]).get_member(cmd.hostmask.nick).mode.contains("o"):
-            client.quit(quitmessage)
+        if cmd.client.get_channel_info(cmd.args[0]).get_member(cmd.hostmask.nick).mode.contains("o"):
+            raise QuitException()
             sys.exit(0)
         else:
             cmd.client.send_message(cmd.hostamsk.nick + ": Permission denied. You must be +o.", cmd.args[0])
@@ -291,15 +291,18 @@ def process_join(cmd):
 
 
 def signal_handler(signal, frame):
-    client.quit(config.get_quitmessage())
-    print ''
-    sys.exit(0)
+    on_quit()
 signal.signal(signal.SIGINT, signal_handler)
 
 
 def on_command_sent(client, line):
-    print client.networkinfo["server"] + " > " + line
+    print client.networkinfo["server"] + " < " + line
 
+def on_quit():
+    for i in clients:
+        i.quit()
+    print ''
+    sys.exit(0)
 
 clients = []
 for i in config.get_networks():
@@ -312,36 +315,41 @@ inputstreams = [sys.stdin]
 for i in clients:
     inputstreams.append(i.socket)
 
-while True:
-    s = select.select(inputstreams, [], [])[0]
-    
-    if sys.stdin in s:
-        client.send_line(sys.stdin.readline().strip() + "\r\n")
-        continue
+class QuitException:
+    pass
 
-    for i in clients:
-        if i.socket not in s: continue
-
-        cmd = i.read_command()
-        if not cmd.is_valid:
+try:
+    while True:
+        s = select.select(inputstreams, [], [])[0]
+        
+        if sys.stdin in s:
+            client.send_line(sys.stdin.readline().strip() + "\r\n")
             continue
 
-        print i.networkinfo["server"] + ": " + cmd.line
+        for i in clients:
+            if i.socket not in s: continue
 
-        sender = re.match(r'([^\s]+)', cmd.hostmask.string)
-        if sender:
-            sender = sender.group(1)
-            ignore = False
-            for ignore_pattern in i.networkinfo["ignore"]:
-                if re.match(ignore_pattern, sender):
-                    ignore = True
+            cmd = i.read_command()
+            if not cmd.is_valid:
+                continue
 
-        if cmd.command == "PRIVMSG" and not ignore:
-            process_message(cmd)
-            flood_check(cmd)
-        elif cmd.command == "JOIN":
-            process_join(cmd)
-        elif cmd.command == "MODE":
-            process_mode(cmd)
+            print i.networkinfo["server"] + " > " + cmd.line
 
+            sender = re.match(r'([^\s]+)', cmd.hostmask.string)
+            if sender:
+                sender = sender.group(1)
+                ignore = False
+                for ignore_pattern in i.networkinfo["ignore"]:
+                    if re.match(ignore_pattern, sender):
+                        ignore = True
+
+            if cmd.command == "PRIVMSG" and not ignore:
+                process_message(cmd)
+                flood_check(cmd)
+            elif cmd.command == "JOIN":
+                process_join(cmd)
+            elif cmd.command == "MODE":
+                process_mode(cmd)
+except QuitException:
+    on_quit()
 

@@ -11,17 +11,21 @@
     "networks": [
         {
             "server": "irc.esper.net",
-            "port": 6667,
+            "port": 6697,
+            "ssl": true,
             "identity": "default",
             "ignore": [".*services\\.esper\\.net"],
-            "autorun": ["JOIN #linux,#freiwuppertal"]
+            "autorun": ["JOIN #linux,#freiwuppertal"],
+            "consoleport": 12345
         },
         {
             "server": "irc.oftc.net",
-            "port": 6667,
+            "port": 6697,
+            "ssl": true,
             "identity": "default",
             "ignore": [".*services\\.oftc\\.net"],
-            "autorun": ["JOIN #linux"]
+            "autorun": ["JOIN #linux"],
+            "consoleport": 12346
         }
     ],
 

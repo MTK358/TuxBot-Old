@@ -14,7 +14,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/gpl-3.0.html .
 
-import re, socket, time
+import re, socket, time, ssl
 
 def areIrcNamesEqual(a, b):
     return a.lower() == b.lower() # FIXME
@@ -158,12 +158,15 @@ class Client:
 
     def send_line(self, line):
         if self.on_command_sent_callback: self.on_command_sent_callback(self, line)
-        self.socket.send(line + "\r\n")
+        self.socket.send(line.encode("utf-8") + "\r\n")
 
     def connect(self, networkinfo):
         self.networkinfo = networkinfo
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if networkinfo["ssl"]:
+            self.socket = ssl.wrap_socket(self.socket)
+
         self.socket.connect((self.networkinfo["server"], self.networkinfo["port"]))
         self.send_line("NICK %s" % (self.networkinfo["identity"]["nick"]))
         self.send_line("USER %s 8 * :%s" % (self.networkinfo["identity"]["username"], self.networkinfo["identity"]["realname"]))
@@ -179,8 +182,8 @@ class Client:
                 line += self.socket.recv(1)
                 if len(line) >= 2 and line[-2:] == "\r\n":
                     break
-            line = line.strip()
-            com = Command(line, time, self)
+            line = line.strip().decode("utf-8")
+            com = Command(line, time.time(), self)
             if com.is_valid:
                 self.process_incoming_command(com)
             return com

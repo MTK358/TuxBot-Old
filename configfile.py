@@ -36,6 +36,8 @@ class ConfigFile:
         nets = self.contents["networks"]
         for i in range(0, len(nets)):
             nets[i]["identity"] = self.contents["identities"][nets[i]["identity"]]
+            if not "ssl" in nets[i]:
+                nets[i]["ssl"] = False
         return nets
 
 
