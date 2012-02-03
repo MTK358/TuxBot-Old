@@ -16,7 +16,7 @@
             "identity": "default",
             "ignore": [".*services\\.esper\\.net"],
             "autorun": ["JOIN #freiwuppertal,#schachburg"],
-            "consoleport": 12344
+            "abbreviation": "esper"
         }
     ],
 

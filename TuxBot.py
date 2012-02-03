@@ -16,7 +16,6 @@
 
 import irc
 from configfile import ConfigFile
-from consoleserver import ConsoleServer
 import misc
 import datetime, getpass, os, random, re, select, signal, sys, time
 
@@ -282,27 +281,19 @@ signal.signal(signal.SIGINT, signal_handler)
 def on_command_sent(client, line):
     print client.networkinfo["server"] + " < " + line
 
+
 def on_quit():
-    for i in clientconsoles:
-        i.close()
     for i in clients:
         i.quit()
     sys.exit(0)
 
-def console_line_received_callback(console, line):
-    clients[clientconsoles.index(console)].send_line(line)
 
 clients = []
-clientconsoles = []
 for i in config.get_networks():
     j = irc.Client()
     j.connect(i)
     j.set_on_command_sent_callback(on_command_sent)
     clients.append(j)
-    k = ConsoleServer(j.networkinfo["consoleport"])
-    k.set_line_received_callback(console_line_received_callback)
-    clientconsoles.append(k)
-    k.start()
 
 inputstreams = [sys.stdin]
 for i in clients:
@@ -316,7 +307,18 @@ try:
         s = select.select(inputstreams, [], [])[0]
         
         if sys.stdin in s:
-            client.send_line(sys.stdin.readline().strip() + "\r\n")
+            line = sys.stdin.readline()
+            match = re.match(r'(\*|[a-zA-Z0-9]+) +([^ ].*)', line)
+            if match:
+                prefix, line = match.group(1), match.group(2)
+                if prefix is "*":
+                    for client in clients:
+                        client.send_line(line)
+                else:
+                    for client in clients:
+                        abbrev = client.networkinfo["abbreviation"]
+                        if prefix == abbrev or (len(prefix) < len(abbrev) and prefix == abbrev[:len(prefix)]):
+                            client.send_line(line)
             continue
 
         for i in clients:
@@ -327,7 +329,6 @@ try:
                 continue
 
             print i.networkinfo["server"] + " > " + cmd.line
-            clientconsoles[clients.index(i)].send_line(cmd.line)
 
             sender = re.match(r'([^\s]+)', cmd.hostmask.string)
             if sender:

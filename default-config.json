@@ -16,7 +16,7 @@
             "identity": "default",
             "ignore": [".*services\\.esper\\.net"],
             "autorun": ["JOIN #linux,#freiwuppertal"],
-            "consoleport": 12345
+            "abbreviation": "esper"
         },
         {
             "server": "irc.oftc.net",
@@ -25,7 +25,7 @@
             "identity": "default",
             "ignore": [".*services\\.oftc\\.net"],
             "autorun": ["JOIN #linux"],
-            "consoleport": 12346
+            "abbreviation": "oftc"
         }
     ],
 
