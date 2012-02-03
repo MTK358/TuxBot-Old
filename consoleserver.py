@@ -25,38 +25,53 @@ class ConsoleServer (threading.Thread):
         self.serversocket = None
 
     def run(self):
-        self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.serversocket.setblocking(0)
-        self.serversocket.bind(("", self.port))
-        self.serversocket.listen(5)
+        try:
+            self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.serversocket.setblocking(0)
+            self.serversocket.bind(("", self.port))
+            self.serversocket.listen(5)
+            self.keep_running = True
 
-        while True:
-            s = select.select(self.clientsockets + [self.serversocket], [], [])[0]
-            for i in s:
-                if i is self.serversocket:
-                    newclient = i.accept()[0]
-                    newclient.setblocking(0)
-                    self.clientsockets.append(newclient)
-                else:
-                    line = ""
-                    while True:
-                        char = i.recv(1)
-                        if char in ("\r", "\n"):
-                            if len(line) is not 0: break
-                        else:
-                            line += char
-                    line = line.decode("utf-8")
-                    self.line_received_callback(self, line)
+            while self.keep_running:
+                s = select.select(self.clientsockets + [self.serversocket], [], [], 1)[0]
+                for i in s:
+                    if i is self.serversocket:
+                        newclient = i.accept()[0]
+                        newclient.setblocking(0)
+                        self.clientsockets.append(newclient)
+                    else:
+                        try:
+                            line = ""
+                            while True:
+                                char = i.recv(1)
+                                if char in ("\r", "\n"):
+                                    if len(line) is not 0: break
+                                else:
+                                    line += char
+                            line = line.decode("utf-8")
+                            self.line_received_callback(self, line)
+                        except socket.error:
+                            i.close()
+                            self.clientsockets.remove(i)
+        except:
+            self.close()
 
     def send_line(self, line):
         for i in self.clientsockets:
-            i.send(line.encode("utf-8") + "\n")
+            try:
+                i.send(line.encode("utf-8") + "\n")
+            except socket.error:
+                i.close()
+                self.clientsockets.remove(i)
 
     def set_line_received_callback(self, callback):
         self.line_received_callback = callback
 
     def close(self):
+        self.serversocket.shutdown(socket.SHUT_RDWR)
         self.serversocket.close()
         for i in self.clientsockets:
+            i.shutdown(socket.SHUT_RDWR)
             i.close()
+        self.keep_running = False
 

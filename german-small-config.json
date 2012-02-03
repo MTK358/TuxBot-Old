@@ -1,0 +1,56 @@
+{
+    "identities": {
+        "default": {
+            "nick": "GermanTuxBot",
+            "username": "TuxBot",
+            "realname": "The German #Linux Bot für #freiwuppertal and #schachburg",
+            "quitmessage": "Speicherzugriffsfehler"
+        }
+    },
+
+    "networks": [
+        {
+            "server": "irc.esper.net",
+            "port": 6697,
+            "ssl": true,
+            "identity": "default",
+            "ignore": [".*services\\.esper\\.net"],
+            "autorun": ["JOIN #freiwuppertal,#schachburg"],
+            "consoleport": 12344
+        }
+    ],
+
+    "command-prefixes": ["!", "[Tt][Uu][Xx][Bb][Oo][Tt] *, *"],
+
+    "responses": [
+        ["message", "hi( .*)?", "message", "hi! :)"],
+
+        ["message", ".*(hi|hallo|hey|hai|(guten|gute) (morgen|mittag|abend|nacht)) +tuxbot", "message", "\\1 %s"],
+
+        ["message", ".*(ich hasse tuxbot|ich finde tuxbot|tuxbot ist (blöd|unnötig|dumm|schlecht|unintelligent)).*",
+         "message", ["Sei leise!", "Wirklich? :(", "Warum?", "Du musst mich ja nicht mögen =P", "Machst du Witze? O.O"]],
+
+        ["message", ".*(ich (mag|liebe) tuxbot|ich finde tuxbot|tuxbot ist (cool|nett|freundlich|gut|intelligentgut|intelligent|nützlich)).*",
+         "message", ["Danke!", "Wirklich? :)", "Und warum?", "Danke, ich mag dich auch.^^", "Das freut mich."]],
+
+        ["message", ".*windows ist.*besser als.*", "message", "Windows ist einfach nur blöd. ;)"],
+
+        ["message", ".*(tuxbot wie (gehts|gehts dir|geht es dir)|wie (gehts|gehts dir|geht es dir) tuxbot|tuxbot (was geht ab|alles klar|alles im grünen bereich|alles ok)|(was geht ab|alles klar|alles im grünen bereich|alles ok) tuxbot).*",
+         "message", ["Mir gehts gut, lol", "Alles in Ordnung bei mir. ;)", "Es könnte besser sein... :/", "Mir gehts gut, danke für die Nachfrage! :D", "Mir geht es SUPER! :DD"]],
+
+        ["message", "janein .*",
+         "message", ["Ja.", "Nein.", "Ja, absolut. :D", "Nein, nicht wirklich. ;)", "Ja, warum nicht?", "NEIN!!! O.O", "Vielleicht...", "Keine Ahnung. :/", "Na, was glaubst /du/ denn?!", "Ich habe nicht das Recht dazu, eine solche Frage ehrlich zu beantworten."]],
+
+        ["message", ".*\\b(bye|bis bald|tschüs|tschüss|auf wiedersehen|cu)\\b.*",
+         "message", ["Bis bald! :-)", "Auf Wiedersehen! :-)", "Kommst du denn morgen wieder? :D", "Man sieht sich!"]]
+    ],
+
+    "help": {
+    },
+
+    "xkcd": {
+        "linux": [797, 619, 963, 838],
+        "geek": [149, 571, 356, 530, 353, 293, 936, 457, 371, 916, 888, 285]
+    }
+}
+

@@ -274,23 +274,6 @@ def flood_check(cmd):
         flood_data[idstr] = {"time": time.time(), "count": 1}
 
 
-def op_config_ops(client, channel, hostmask):
-    member = client.get_channel_info(channel).get_member(hostmask.nick)
-    if not member: return
-
-    if not member.mode.contains("o"):
-        client.send_line("MODE %s +o %s" % (channel, hostmask.nick));
-
-
-def process_mode(cmd):
-    if len(cmd.args) >= 3:
-        op_config_ops(cmd.client, cmd.args[0], cmd.hostmask)
-
-
-def process_join(cmd):
-    op_config_ops(cmd.client, cmd.args[0], cmd.hostmask)
-
-
 def signal_handler(signal, frame):
     on_quit()
 signal.signal(signal.SIGINT, signal_handler)
@@ -357,10 +340,6 @@ try:
             if cmd.command == "PRIVMSG" and not ignore:
                 process_message(cmd)
                 flood_check(cmd)
-            elif cmd.command == "JOIN":
-                process_join(cmd)
-            elif cmd.command == "MODE":
-                process_mode(cmd)
 except QuitException:
     on_quit()
 
