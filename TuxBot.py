@@ -66,9 +66,9 @@ def process_command_message(line, cmd):
     # !help -- get help about TuxBot's commads
     match = re.match(r'help$', line)
     if match:
-        cmd.client.send_private_notice(commandref, cmd.hostmask.nick)
+        cmd.client.send_notice(commandref, cmd.hostmask.nick)
         if cmd.client.get_channel_info(cmd.args[0]).get_member(cmd.hostmask.nick).mode.contains("o"):
-            cmd.client.send_private_notice(opcommandref, cmd.hostmask.nick)
+            cmd.client.send_notice(opcommandref, cmd.hostmask.nick)
         return True
 
     # !help <key> -- get help
@@ -173,7 +173,7 @@ def process_command_message(line, cmd):
     # !license or !authors or !credits -- display license information and the names of the people who made TuxBot
     match = re.match(r'credits|authors|license$', line)
     if match:
-        cmd.client.send_private_notice(license, sender)
+        cmd.client.send_notice(license, sender)
         return True
 
     # !user -- display the username which this python script is running under
