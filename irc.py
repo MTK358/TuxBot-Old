@@ -14,7 +14,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/gpl-3.0.html .
 
-import re, socket, time, ssl
+import re, socket, time, ssl, threading
 
 def areIrcNamesEqual(a, b):
     return a.lower() == b.lower() # FIXME
@@ -150,8 +150,12 @@ class ChannelInfo:
 
 class Client:
 
-    def __init__(self):
+    def __init__(self, networkinfo):
+        self.networkinfo = networkinfo
         self.on_command_sent_callback = None
+        self.ping_timer = None
+        self.ping_status = ""
+        self.tempban_timers = []
 
     def set_on_command_sent_callback(self, callback):
         self.on_command_sent_callback = callback
@@ -160,11 +164,9 @@ class Client:
         if self.on_command_sent_callback: self.on_command_sent_callback(self, line)
         self.socket.send(line.encode("utf-8") + "\r\n")
 
-    def connect(self, networkinfo):
-        self.networkinfo = networkinfo
-
+    def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if networkinfo["ssl"]:
+        if self.networkinfo["ssl"]:
             self.socket = ssl.wrap_socket(self.socket)
 
         self.socket.connect((self.networkinfo["server"], self.networkinfo["port"]))
@@ -174,6 +176,32 @@ class Client:
         self.nick = self.networkinfo["identity"]["nick"]
         self.mode = Mode()
         self.channelinfos = []
+
+    def on_ping_timer(self):
+        if self.ping_status is "":
+            self.ping_status = "TuxBot"
+            if self.ping_timer: self.ping_timer.cancel()
+            self.ping_timer = threading.Timer(10, self.on_ping_timer)
+        else:
+            self.socket.close()
+            if self.ping_timer: self.ping_timer.cancel()
+            self.ping_timer = threading.Timer(5, self.connect)
+
+    def tempban(self, channel, nick, reason, timeout):
+        hostmask = self.get_channel_info(channel).get_member(nick).hostmask.host
+        if hostmask:
+            hostmask = "*!*@" + hostmask
+        else:
+            hostmask = nick + "!*@*"
+        self.send_line("MODE %s +b %s" % (channel, hostmask))
+        self.send_line("KICK %s %s :%s (Temporary ban, %i seconds)" % (channel, nick, reason, timeout))
+        timer = threading.Timer(timeout, self.on_tempban_timeout, [channel, hostmask])
+        self.tempban_timers.append(timer)
+        timer.start()
+
+    def on_tempban_timeout(self, channel, hostmask):
+        self.send_line("MODE %s -b %s" % (channel, hostmask))
+        self.tempban_timers.remove(timer)
 
     def read_command(self):
         line = ""
@@ -285,6 +313,16 @@ class Client:
         elif com.command == "001": # WELCOME reply
             for i in self.networkinfo["autorun"]:
                 self.send_line(i)
+            self.ping_status = ""
+            if self.ping_timer: self.ping_timer.cancel()
+            self.ping_timer = threading.Timer(30, self.on_ping_timer)
+
+        elif com.command == "PONG":
+            if com.args[1] == self.ping_status:
+                self.ping_status = ""
+                if self.ping_timer: self.ping_timer.cancel()
+                self.ping_timer = threading.Timer(30, self.on_ping_timer)
+
 
         elif com.command == "PING":
             self.send_line(u"PONG :%s" % com.args[0])

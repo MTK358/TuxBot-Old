@@ -240,6 +240,8 @@ def run_action(action, match, cmd):
             cmd.client.send_message(match.expand(action[1]), cmd.args[0])
     elif action[0] == "command":
         process_command_message(match.expand(action[1]), cmd)
+    elif action[0] == "tempban":
+        cmd.client.tempban(cmd.args[0], cmd.hostmask.nick, action[1][0], action[1][1])
 
 
 flood_data = {}
@@ -256,15 +258,16 @@ def flood_check(cmd):
     found = False
     for i in flood_data.keys():
         # delete entries older than the timeout period
-        if flood_data[i]["time"] < time.time() - 2:
+        if flood_data[i]["time"] < time.time() - config.contents["floodkick"]["time"]:
             del flood_data[i]
             continue
         # if this message was posted before by the same person less than the timeout period ago
-        if i == idstr and len(message) <= 5:
+        if i == idstr and len(message) <= config.contents["floodkick"]["maxlen"]:
             found = True
             count = flood_data[idstr]["count"] + 1
-            if count >= 5:
+            if count >= config.contents["floodkick"]["count"]:
                 client.send_line("KICK %s %s :Flooding" % (channel, sender))
+                cmd.client.tempban(channel, sender, config.contents["floodkick"]["message"], config.contents["floodkick"]["bantime"])
                 del flood_data[idstr]
             else:
                 flood_data[idstr]["count"] = count
@@ -290,8 +293,8 @@ def on_quit():
 
 clients = []
 for i in config.get_networks():
-    j = irc.Client()
-    j.connect(i)
+    j = irc.Client(i)
+    j.connect()
     j.set_on_command_sent_callback(on_command_sent)
     clients.append(j)
 
