@@ -14,7 +14,13 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/gpl-3.0.html .
 
-import re, urllib
+import re, urllib, htmllib
+
+def html_unescape(s):
+    p = htmllib.HTMLParser(None)
+    p.save_bgn()
+    p.feed(s)
+    return p.save_end()
 
 def get_man_page(section, name):
     return "http://linux.die.net/man/%s/%s" % (section, name)
@@ -58,14 +64,31 @@ def translate(from_lang, to_lang, text):
         response = urllib.urlopen("http://babelfish.yahoo.com/translate_txt", params)
     except ioerror, e:
         return "(error: %s)" % (e)
-
-    html = response.read().decode("iso-8859-1").encode("utf-8")
+    html = response.read().decode("iso-8859-1")
+    response.close()
 
     match = re.search(r'<div id="result">(<div [^>]*>)?(.*?)</div>', html)
     if match:
-        return match.group(2)
+        return html_unescape(match.group(2))
 
-    response.close()
 
     return "(error: could not extract translated text from response)"
+
+def get_page_title(url):
+    print url
+    try:
+        response = urllib.urlopen(url)
+    except:
+        return "(error)"
+    html = response.read() # TODO decode
+    response.close()
+
+    match = re.search(r'<title>(.+)</title>', html)
+    if match:
+        title = match.group(1)
+        if not title:
+            return "(could not extract title from page)"
+        return html_unescape(title)
+
+    return "(failed to read page)"
 

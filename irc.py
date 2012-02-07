@@ -210,7 +210,11 @@ class Client:
                 line += self.socket.recv(1)
                 if len(line) >= 2 and line[-2:] == "\r\n":
                     break
-            line = line.strip().decode("utf-8")
+            line = line.strip()
+            try:
+                line = line.decode("utf-8")
+            except:
+                line = line.decode("iso-8859-15")
             com = Command(line, time.time(), self)
             if com.is_valid:
                 self.process_incoming_command(com)
