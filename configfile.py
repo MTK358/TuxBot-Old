@@ -14,7 +14,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/gpl-3.0.html .
 
-import json
+import yaml
 
 class ConfigFile:
     
@@ -24,7 +24,7 @@ class ConfigFile:
 
     def reload(self):
         f = open(self.path, "r")
-        self.contents = json.load(f)
+        self.contents = yaml.load(f)
         f.close()
 
         self._validate();

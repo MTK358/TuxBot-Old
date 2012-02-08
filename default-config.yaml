@@ -1,0 +1,126 @@
+
+identities:
+    default:
+        nick: TuxBot
+        username: TuxBot
+        realname: "The #Linux Bot"
+        quitmessage: Segmentation fault
+
+networks:
+    - server: irc.esper.net
+      port: 6697
+      ssl: true
+      identity: default
+      ignore:
+          - ".*services\\.esper\\.net"
+      autorun:
+          - "JOIN #linux,#freiwuppertal"
+      abbreviation: esper
+
+    - server: irc.oftc.net
+      port: 6697
+      ssl: true
+      identity: default
+      ignore:
+          - ".*services\\.oftc\\.net"
+      autorun:
+          - "JOIN #linux"
+      abbreviation: oftc
+
+relaying:
+    - - ["esper", "#linux"]
+      - ["oftc", "#linux"]
+    - - ["oftc", "#linux"]
+      - ["esper", "#linux"]
+
+command-prefixes:
+    - "!"
+    - "[Tt][Uu][Xx][Bb][Oo][Tt] *, *"
+
+responses:
+    - - command
+      - "yesno"
+      - message
+      - - "Yes."
+        - "No."
+        - "Yes, absolutely :D"
+        - "No, not really ;)"
+        - "Yes, why not?"
+        - "No!!! O.O"
+        - "Maybe..."
+        - "I don't know. :/"
+        - "Well, what do \u0002you\u0002 think?"
+        - "I am not authorized to answer a question like this."
+    - - message
+      - "(hi|hello|hey|good (morning|afternoon|evening|night))\\s+tuxbot"
+      - message"
+      - "\\1 %s"
+    - - message
+      - ".*(i (hate|dont like) tuxbot|tuxbot is (stupid|dumb|useless)).*"
+      - message
+      - - "Shut up!"
+        - "Really? :("
+        - "Why?"
+        - "You do not have to like me =P"
+        - "You must be kidding! O.O"
+    - - message
+      - ".*windows is.*better than.*"
+      - message
+      - "Windows is just stupid. ;)"
+    - - message
+      - ".*(tuxbot how are you|how are you tuxbot)|(tuxbot how do you do|how do you do tuxbot).*"
+      - message
+      - - "I'm fine."
+        - "I'm fine, thanks. ;)"
+        - "Could be better... :/"
+        - "I'm okay, thanks for asking! :D"
+        - "I'm great! :DD"
+    - - message
+      - ".*i wish you cold winds.*"
+      - message
+      - "May the ice bring you wisdom. :)"
+    - - message"
+      - ".*\\bcu\\b.*"
+      - message
+      - "May the source be with you."
+    - - command
+      - "tuxgames"
+      - message
+      - >
+          Games featuring Tux in the Ubuntu or PlayDeb repository: -
+          ExtremeTuxRacer: Race down hills with Tux in 3D, using OpenGL. Needs
+          a good graphics card. - FreeDroidRPG: A RPG about Tux saving the
+          world from hostile robots. You can "hack" or just fight the robots. -
+          SuperTux: A "Super Mario" clone using Tux instead of Mario and taking
+          place somewhere in Antarctica - If you know more games, please tell
+          one of the TuxBot developers about them.
+    - - message
+      - ".*need help with (.*)"
+      - command", "help \\1"
+    - - message
+      - "ban me"
+      - tempban"
+      - ["You wanted me to ban you", 5]
+    - - message
+      - ".*(http://[^\\s),]+).*"
+      - pagetitle
+      - "\\1"
+    - - command
+      - "echo +([^ ].*)"
+      - message
+      - "\\1"
+
+help:
+    example: this is an example help entry
+
+floodkick:
+    time: 2
+    count: 5
+    maxlen: 5
+    bantime: 10
+    message: Flooding
+
+xkcd:
+    linux: [797, 619, 963, 838]
+    geek: [149, 571, 356, 530, 353, 293, 936, 457, 371, 916, 888, 285]
+
