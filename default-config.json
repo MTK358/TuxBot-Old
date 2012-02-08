@@ -29,6 +29,17 @@
         }
     ],
 
+    "relaying": [
+        [
+            ["esper", "#linux"],
+            ["oftc", "#linux"]
+        ],
+        [
+            ["oftc", "#linux"],
+            ["esper", "#linux"]
+        ]
+    ],
+
     "command-prefixes": ["!", "[Tt][Uu][Xx][Bb][Oo][Tt] *, *"],
 
     "responses": [
@@ -59,7 +70,8 @@
         ["command", "tuxgames", "message", "Games featuring Tux in the Ubuntu or PlayDeb repository: - ExtremeTuxRacer: Race down hills with Tux in 3D, using OpenGL. Needs a good graphics card. - FreeDroidRPG: A RPG about Tux saving the world from hostile robots. You can \"hack\" or just fight the robots. - SuperTux: A \"Super Mario\" clone using Tux instead of Mario and taking place somewhere in Antarctica - If you know more games, please tell one of the TuxBot developers about them."],
         ["message", ".*need help with (.*)", "command", "help \\1"],
         ["message", "ban me", "tempban", ["You wanted me to ban you", 5]],
-        ["message", ".*(http://[^\\s),]+).*", "pagetitle", "\\1"]
+        ["message", ".*(http://[^\\s),]+).*", "pagetitle", "\\1"],
+        ["command", "echo +([^ ].*)", "message", "\\1"]
     ],
 
     "help": {

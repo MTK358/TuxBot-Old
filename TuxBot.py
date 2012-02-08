@@ -217,6 +217,13 @@ def process_command_message(line, cmd):
 
 
 def process_message(cmd):
+    for relaying_entry in config.contents["relaying"]:
+        if cmd.client.networkinfo["abbreviation"] == relaying_entry[0][0] and cmd.args[0] == relaying_entry[0][1]:
+            for i in relaying_entry[1:]:
+                for client in clients:
+                    if client.networkinfo["abbreviation"] == i[0]:
+                        client.send_message("<%s@%s@%s> %s" % (cmd.hostmask.nick, cmd.args[0], cmd.client.networkinfo["abbreviation"], cmd.args[1]), i[1])
+
     for command_prefix in config.contents["command-prefixes"]:
         match = re.match(command_prefix, cmd.args[1])
         if match and process_command_message(cmd.args[1][len(match.group(0)):], cmd):
