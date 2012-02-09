@@ -30,7 +30,7 @@ networks:
       abbreviation: oftc
 
 relaying:
-    - show-network-name: false
+    - show-network-name: true
       show-channel-name: false
       channels:
           - ["EsperNet", "#linux"]

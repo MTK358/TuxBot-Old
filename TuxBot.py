@@ -251,17 +251,21 @@ def run_action(action, match, cmd):
         cmd.client.send_message(title, cmd.args[0])
 
 
+nick_colors = [4, 7, 9, 10, 11, 13]
+def get_nick_color(nick):
+    return nick_colors[hash(nick) % len(nick_colors)]
+
 def relay(nick, channel, net, text):
     for relay_group in config.contents["relaying"]:
         if [net, channel] in relay_group["channels"]:
             for relay_group_entry in relay_group["channels"]:
                 if relay_group_entry == [net, channel]: continue
-                message = "<%s" % (nick)
+                message = "\x03%i<%s" % (get_nick_color(nick), nick)
                 if (relay_group["show-channel-name"]):
                     message += "@%s" % (channel)
                 if (relay_group["show-network-name"]):
                     message += "@%s" % (net)
-                message += "> %s" % (text)
+                message += ">\x0f %s" % (text)
                 get_client_by_name(relay_group_entry[0]).send_message(message, relay_group_entry[1], nocallback=True)
 
 
@@ -375,6 +379,7 @@ try:
             if cmd.command == "PRIVMSG" and not ignore:
                 process_message(cmd)
                 flood_check(cmd)
+
 except QuitException:
     on_quit()
 
