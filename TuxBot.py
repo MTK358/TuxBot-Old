@@ -217,12 +217,7 @@ def process_command_message(line, cmd):
 
 
 def process_message(cmd):
-    for relaying_entry in config.contents["relaying"]:
-        if cmd.client.networkinfo["abbreviation"] == relaying_entry[0][0] and cmd.args[0] == relaying_entry[0][1]:
-            for i in relaying_entry[1:]:
-                for client in clients:
-                    if client.networkinfo["abbreviation"] == i[0]:
-                        client.send_message("<%s@%s@%s> %s" % (cmd.hostmask.nick, cmd.args[0], cmd.client.networkinfo["abbreviation"], cmd.args[1]), i[1])
+    relay(cmd.hostmask.nick, cmd.args[0], cmd.client.networkinfo["name"], cmd.args[1])
 
     for command_prefix in config.contents["command-prefixes"]:
         match = re.match(command_prefix, cmd.args[1])
@@ -254,6 +249,20 @@ def run_action(action, match, cmd):
         if len(title) > 200:
             title = title[:197] + "..."
         cmd.client.send_message(title, cmd.args[0])
+
+
+def relay(nick, channel, net, text):
+    for relay_group in config.contents["relaying"]:
+        if [net, channel] in relay_group["channels"]:
+            for relay_group_entry in relay_group["channels"]:
+                if relay_group_entry == [net, channel]: continue
+                message = "<%s" % (nick)
+                if (relay_group["show-channel-name"]):
+                    message += "@%s" % (channel)
+                if (relay_group["show-network-name"]):
+                    message += "@%s" % (net)
+                message += "> %s" % (text)
+                get_client_by_name(relay_group_entry[0]).send_message(message, relay_group_entry[1], nocallback=True)
 
 
 flood_data = {}
@@ -294,6 +303,10 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 def on_command_sent(client, line):
+    match = re.match(r'PRIVMSG ([^ ]+) :?([^ ].*)', line)
+    if match:
+        relay(client.nick, match.group(1), client.networkinfo["name"], match.group(2))
+
     print client.networkinfo["server"] + " < " + line
 
 
@@ -301,6 +314,12 @@ def on_quit():
     for i in clients:
         i.quit()
     sys.exit(0)
+
+
+def get_client_by_name(name):
+    for client in clients:
+        if client.networkinfo["name"] == name:
+            return client
 
 
 clients = []

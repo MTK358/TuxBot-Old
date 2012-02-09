@@ -160,8 +160,8 @@ class Client:
     def set_on_command_sent_callback(self, callback):
         self.on_command_sent_callback = callback
 
-    def send_line(self, line):
-        if self.on_command_sent_callback: self.on_command_sent_callback(self, line)
+    def send_line(self, line, nocallback = False):
+        if self.on_command_sent_callback and not nocallback: self.on_command_sent_callback(self, line)
         self.socket.send(line.encode("utf-8") + "\r\n")
 
     def connect(self):
@@ -222,12 +222,12 @@ class Client:
         except KeyboardInterrupt:
             pass
 
-    def send_message(self, message, to):
+    def send_message(self, message, to, nocallback = False):
         first = True
         for line in message.split("\n"):
             if not first:
                 time.sleep(1)
-            self.send_line(u"PRIVMSG " + to + " :" + line)
+            self.send_line(u"PRIVMSG " + to + " :" + line, nocallback)
             first = False
 
     def send_notice(self, message, nick):

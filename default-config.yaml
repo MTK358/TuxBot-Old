@@ -7,7 +7,8 @@ identities:
         quitmessage: Segmentation fault
 
 networks:
-    - server: irc.esper.net
+    - name: EsperNet
+      server: irc.esper.net
       port: 6697
       ssl: true
       identity: default
@@ -17,7 +18,8 @@ networks:
           - "JOIN #linux,#freiwuppertal"
       abbreviation: esper
 
-    - server: irc.oftc.net
+    - name: OFTC
+      server: irc.oftc.net
       port: 6697
       ssl: true
       identity: default
@@ -28,10 +30,11 @@ networks:
       abbreviation: oftc
 
 relaying:
-    - - ["esper", "#linux"]
-      - ["oftc", "#linux"]
-    - - ["oftc", "#linux"]
-      - ["esper", "#linux"]
+    - show-network-name: false
+      show-channel-name: false
+      channels:
+          - ["EsperNet", "#linux"]
+          - ["OFTC", "#linux"]
 
 command-prefixes:
     - "!"
