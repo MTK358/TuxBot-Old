@@ -177,15 +177,21 @@ class Client:
         self.mode = Mode()
         self.channelinfos = []
 
+        self.welcome_timeout_timer = threading.Timer(30, self.on_welcome_timeout)
+
     def on_ping_timer(self):
         if self.ping_status is "":
             self.ping_status = "TuxBot"
-            if self.ping_timer: self.ping_timer.cancel()
-            self.ping_timer = threading.Timer(10, self.on_ping_timer)
+            self.send_command("PING TuxBot")
+            self.ping_timer = threading.Timer(60, self.on_ping_timer)
         else:
             self.socket.close()
             if self.ping_timer: self.ping_timer.cancel()
             self.ping_timer = threading.Timer(5, self.connect)
+
+    def on_welcome_timeout(self):
+        self.socket.close()
+        self.ping_timer = threading.Timer(5, self.connect)
 
     def tempban(self, channel, nick, reason, timeout):
         hostmask = self.get_channel_info(channel).get_member(nick).hostmask.host
@@ -318,6 +324,7 @@ class Client:
             for i in self.networkinfo["autorun"]:
                 self.send_line(i)
             self.ping_status = ""
+            self.welcome_timeout_timer.cancel()
             if self.ping_timer: self.ping_timer.cancel()
             self.ping_timer = threading.Timer(30, self.on_ping_timer)
 
@@ -326,7 +333,6 @@ class Client:
                 self.ping_status = ""
                 if self.ping_timer: self.ping_timer.cancel()
                 self.ping_timer = threading.Timer(30, self.on_ping_timer)
-
 
         elif com.command == "PING":
             self.send_line(u"PONG :%s" % com.args[0])
