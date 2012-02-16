@@ -94,7 +94,7 @@ responses:
       - ".*i wish you cold winds.*"
       - message
       - "May the ice bring you wisdom. :)"
-    - - message"
+    - - message
       - ".*\\bcu\\b.*"
       - message
       - "May the source be with you."
@@ -111,13 +111,14 @@ responses:
           one of the TuxBot developers about them.
     - - message
       - ".*need help with (.*)"
-      - command", "help \\1"
+      - command
+      - "help \\1"
     - - message
       - "ban me"
-      - tempban"
+      - tempban
       - ["You wanted me to ban you", 5]
     - - message
-      - ".*(https?://[^\\s),]+)(?<!\.(png|jpg|bmp|txt)).*"
+      - ".*(https?://[^\\s),]+)(?<!\\.(png|jpg|bmp|txt)).*"
       - pagetitle
       - "\\1"
     - - command

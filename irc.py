@@ -369,6 +369,7 @@ class Client:
         elif com.command == "PONG":
             if com.args[1] == self.ping_status:
                 self.ping_status = ""
+                if self.ping_timer: self.ping_timer.cancel()
                 self.ping_timer = threading.Timer(45, self.on_ping_timer)
 
         elif com.command == "PING":
