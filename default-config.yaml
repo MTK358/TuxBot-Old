@@ -117,7 +117,7 @@ responses:
       - tempban"
       - ["You wanted me to ban you", 5]
     - - message
-      - ".*(http://[^\\s),]+).*"
+      - ".*(https?://[^\\s),]+)(?<!\.(png|jpg|bmp|txt)).*"
       - pagetitle
       - "\\1"
     - - command
