@@ -67,7 +67,7 @@ def process_command_message(line, cmd):
     match = re.match(r'help$', line)
     if match:
         cmd.client.send_notice(commandref, cmd.hostmask.nick)
-        if cmd.client.get_channel_info(cmd.args[0]).get_member(cmd.hostmask.nick).mode.contains("o"):
+        if cmd.client.get_channel_info(cmd.args[0]).get_member(cmd.hostmask.nick).mode.contains_any(["o", "a", "h", "q"]):
             cmd.client.send_notice(opcommandref, cmd.hostmask.nick)
         return True
 
@@ -191,19 +191,19 @@ def process_command_message(line, cmd):
     # !quit -- make TuxBot quit
     match = re.match(r'quit$', line)
     if match:
-        if cmd.client.get_channel_info(cmd.args[0]).get_member(cmd.hostmask.nick).mode.contains("o"):
+        if cmd.client.get_channel_info(cmd.args[0]).get_member(cmd.hostmask.nick).mode.contains_any(["o", "a", "h", "q"]):
             raise QuitException()
             sys.exit(0)
         else:
-            cmd.client.send_message(cmd.hostamsk.nick + ": Permission denied. You must be +o.", cmd.args[0])
+            cmd.client.send_message(cmd.hostamsk.nick + ": Permission denied. You must be an op.", cmd.args[0])
         return True
 
     match = re.match(r'reload-config$', line)
     if match:
-        if cmd.client.get_channel_info(cmd.args[0]).get_member(cmd.hostmask.nick).mode.contains("o"):
+        if cmd.client.get_channel_info(cmd.args[0]).get_member(cmd.hostmask.nick).mode.contains_any(["o", "a", "h", "q"]):
             config.reload()
         else:
-            cmd.client.send_message(cmd.hostamsk.nick + ": Permission denied. You must be +o.", cmd.args[0])
+            cmd.client.send_message(cmd.hostamsk.nick + ": Permission denied. You must be an op.", cmd.args[0])
         return True
 
     for i in config.contents["responses"]:
@@ -379,6 +379,9 @@ try:
             if cmd.command == "PRIVMSG" and not ignore:
                 process_message(cmd)
                 flood_check(cmd)
+            elif cmd.command == "CTCP":
+                if cmd.args[1] == "VERSION":
+                    cmd.client.send_ctcpreply(cmd.hostmask.nick, "VERSION", "TuxBot (%s)" % (version))
 
 except QuitException:
     on_quit()

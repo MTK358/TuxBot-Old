@@ -39,6 +39,9 @@ class Hostmask:
             self.host = string
             self.string = string
 
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__, self.__dict__)
+        
 
 class Command:
 
@@ -77,18 +80,22 @@ class Command:
 
         # CTCP
         if len(self.args) == 2 and self.args[1][0] == "\x01" and self.args[1][-1] == "\x01" and (self.command == "PRIVMSG" or self.command == "NOTICE"):
-
             if self.command == "PRIVMSG":
                 self.command = "CTCP"
             else:
                 self.command = "CTCPREPLY"
 
-            self.args[1] = self.args[1][1:-2]
+            self.args[1] = self.args[1][1:-1]
 
             index = self.args[1].find(" ")
             if index != -1:
                 self.args.append(self.args[1][index+1:])
                 self.args[1] = self.args[1][:index]
+            
+            self.args[1] = self.args[1].upper()
+
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__, self.__dict__)
 
 
 class Mode:
@@ -183,7 +190,7 @@ class Client:
         if self.ping_status is "":
             self.ping_status = "TuxBot"
             self.send_command("PING TuxBot")
-            self.ping_timer = threading.Timer(60, self.on_ping_timer)
+            self.ping_timer = threading.Timer(15, self.on_ping_timer)
         else:
             self.socket.close()
             if self.ping_timer: self.ping_timer.cancel()
@@ -235,6 +242,20 @@ class Client:
                 time.sleep(1)
             self.send_line(u"PRIVMSG " + to + " :" + line, nocallback)
             first = False
+            
+    def send_ctcp(self, to, cmd, arg = None):
+        if arg:
+            message = "%s %s" % (cmd, arg)
+        else:
+            message = cmd
+        self.send_line(u"PRIVMSG %s :\001%s\001" % (to, message))
+    
+    def send_ctcpreply(self, to, cmd, arg = None):
+        if arg:
+            message = "%s %s" % (cmd, arg)
+        else:
+            message = cmd
+        self.send_line(u"NOTICE %s :\001%s\001" % (to, message))
 
     def send_notice(self, message, nick):
         first = True
@@ -299,12 +320,21 @@ class Client:
                     channel.remove_member(com.hostmask.nick)
 
         elif com.command == "MODE":
-            if len(com.args) >= 3:
-                member = self.get_channel_info(com.args[0]).get_member(com.args[2])
-                if member:
-                    member.mode.change(Mode(com.args[2]))
-            elif areIrcNamesEqual(com.args[0], self.nick):
+            if areIrcNamesEqual(com.args[0], self.nick):
                 self.mode.change(Mode(com.args[1]))
+            else:
+                chan = self.get_channel_info(com.args[0])
+                if chan and len(com.args) >= 3:
+                    if len(com.args[1]) >= 2 and len(com.args) == len(com.args[1]) + 1:
+                        for i in range(1, len(com.args[1])):
+                            member = chan.get_member(com.args[i + 1])
+                            if member:
+                                member.mode.change(Mode("%s%s" % (com.args[1][0], com.args[1][i])))
+                    else:
+                        for i in range(1, len(com.args), 2):
+                            member = chan.get_member(com.args[i + 1])
+                            if member:
+                                member.mode.change(Mode(com.args[i]))
 
         elif com.command == "353": # NAMES reply
             channelinfo = self.get_channel_info(com.args[2])
@@ -315,6 +345,15 @@ class Client:
                 elif i[0] == "+":
                     nick = i[1:]
                     mode = Mode("+v")
+                elif i[0] == "%":
+                    nick = i[1:]
+                    mode = Mode("+h")
+                elif i[0] == "&":
+                    nick = i[1:]
+                    mode = Mode("+a")
+                elif i[0] == "~":
+                    nick = i[1:]
+                    mode = Mode("+q")
                 else:
                     nick = i
                     mode = Mode()
@@ -325,15 +364,13 @@ class Client:
                 self.send_line(i)
             self.ping_status = ""
             self.welcome_timeout_timer.cancel()
-            if self.ping_timer: self.ping_timer.cancel()
-            self.ping_timer = threading.Timer(30, self.on_ping_timer)
+            self.ping_timer = threading.Timer(45, self.on_ping_timer)
 
         elif com.command == "PONG":
             if com.args[1] == self.ping_status:
                 self.ping_status = ""
-                if self.ping_timer: self.ping_timer.cancel()
-                self.ping_timer = threading.Timer(30, self.on_ping_timer)
+                self.ping_timer = threading.Timer(45, self.on_ping_timer)
 
         elif com.command == "PING":
             self.send_line(u"PONG :%s" % com.args[0])
-            
+        
