@@ -29,6 +29,18 @@ networks:
           - "JOIN #linux"
       abbreviation: oftc
 
+    - name: Rizon
+      server: irc.rizon.net
+      port: 6697
+      ssl: true
+      identity: default
+      ignore:
+          - ".*Microsoft.com"
+          - ".*.rizon.net"
+      autorun:
+          - "JOIN #freiwuppertal"
+      abbreviation: rizon
+
 relaying:
     - show-network-name: true
       show-channel-name: false
