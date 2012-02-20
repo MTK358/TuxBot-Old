@@ -245,7 +245,13 @@ def run_action(action, match, cmd):
     elif action[0] == "tempban":
         cmd.client.tempban(cmd.args[0], cmd.hostmask.nick, action[1][0], action[1][1])
     elif action[0] == "pagetitle":
-        title = misc.get_page_title(match.expand(action[1]))
+        try:
+            title = misc.get_page_title(match.expand(action[1]))
+        except Exception as e:
+            if e.message == 'Not HTML.':
+                return
+            else:
+                raise e
         if len(title) > 200:
             title = title[:197] + "..."
         cmd.client.send_message(title, cmd.args[0])

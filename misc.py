@@ -80,6 +80,8 @@ def get_page_title(url):
         response = urllib.urlopen(url)
     except:
         return "(error)"
+    if 'text/html' not in response.headers['Content-Type']:
+        raise Exception, "Not HTML."
     html = response.read() # TODO decode
     response.close()
 
