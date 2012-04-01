@@ -14,7 +14,8 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/gpl-3.0.html .
 
-import re, urllib, urllib2, htmllib
+import re, urllib, urllib2
+from htmlentitydefs import name2codepoint
 
 class MyHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
@@ -24,11 +25,8 @@ class MyHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
 
 urllib2.install_opener(urllib2.build_opener(MyHTTPRedirectHandler()))
 
-def html_unescape(s):
-    p = htmllib.HTMLParser(None)
-    p.save_bgn()
-    p.feed(s)
-    return p.save_end()
+def html_entity_decode(s):
+    return re.sub('&(%s);' % '|'.join(name2codepoint), lambda m: unichr(name2codepoint[m.group(1)]), s)
 
 def get_man_page(section, name):
     return "http://linux.die.net/man/%s/%s" % (section, name)
@@ -110,7 +108,7 @@ def get_page_title(url):
         title = match.group(1)
         if not title:
             return "(could not extract title from page)"
-        return html_unescape(title)
+        return html_entity_decode(title)
 
     return "(failed to read page)"
 
