@@ -39,7 +39,7 @@ def search_man_page(name):
 def get_man_page_synopsis(section, name):
     stream = None
     try:
-        stream = urllib.urlopen(get_man_page(section, name))
+        stream = urllib.urlopen2(get_man_page(section, name))
         page = stream.read()
         match = re.match(r'.*<h2>Synopsis</h2>(.*)<h2>Description</h2>.*', page, flags = re.IGNORECASE | re.DOTALL)
         if not match:
@@ -69,7 +69,7 @@ def translate(from_lang, to_lang, text):
                                "urltext": text,
                                "lp": from_lang + "_" + to_lang})
     try:
-        response = urllib.urlopen("http://babelfish.yahoo.com/translate_txt", params)
+        response = urllib.urlopen2("http://babelfish.yahoo.com/translate_txt", params)
     except ioerror, e:
         return "(error: %s)" % (e)
     html = response.read().decode("iso-8859-1")
