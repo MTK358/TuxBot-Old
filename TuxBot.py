@@ -217,6 +217,7 @@ def process_command_message(line, cmd):
 
 
 def process_message(cmd):
+    if len(cmd.args[1][0]) == 0: return
     relay(cmd.hostmask.nick, cmd.args[0], cmd.client.networkinfo["name"], cmd.args[1])
 
     for command_prefix in config.contents["command-prefixes"]:
