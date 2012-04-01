@@ -14,7 +14,15 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/gpl-3.0.html .
 
-import re, urllib, htmllib
+import re, urllib, urllib2, htmllib
+
+class MyHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        request = urllib2.Request(newurl)
+        request.get_method = lambda: req.get_method()
+        return request
+
+urllib2.install_opener(urllib2.build_opener(MyHTTPRedirectHandler()))
 
 def html_unescape(s):
     p = htmllib.HTMLParser(None)
@@ -77,13 +85,23 @@ def translate(from_lang, to_lang, text):
 def get_page_title(url):
     print url
     try:
-        response = urllib.urlopen(url)
+        request = urllib2.Request(url)
+        request.get_method = lambda: 'HEAD'
+        check = urllib2.urlopen(request)
     except:
         return "(error)"
-    if 'text/html' not in response.headers['Content-Type']:
+    if 'Content-Type' not in check.headers or 'text/html' not in check.headers['Content-Type']:
         raise Exception, "Not HTML."
-    if int(response.headers["Content-Length"]) > 200000:
+    if "Content-Length" in check.headers and int(check.headers["Content-Length"]) > 200000:
         raise Exception, "Content too large."
+
+    try:
+        response = urllib2.urlopen(url)
+    except:
+        return "(error)"
+    if 'Content-Type' not in response.headers or 'text/html' not in response.headers['Content-Type']:
+        raise Exception, "Not HTML."
+
     html = response.read() # TODO decode
     response.close()
 
