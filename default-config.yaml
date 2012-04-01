@@ -5,6 +5,12 @@ identities:
         username: TuxBot
         realname: "The #Linux Bot"
         quitmessage: Segmentation fault
+    # because there already is a different "TuxBot" in Freenode
+    freenode:
+        nick: AntarcticTuxBot
+        username: TuxBot
+        realname: "The #Linux Bot"
+        quitmessage: Segmentation fault
 
 networks:
     - name: EsperNet
@@ -28,6 +34,17 @@ networks:
       autorun:
           - "JOIN #linux"
       abbreviation: oftc
+
+    - name: Freenode
+      server: irc.freenode.net
+      port: 6697
+      ssl: true
+      identity: freenode
+      ignore:
+          - ".*services\\.freenode\\.net"
+      autorun:
+          - "JOIN #TuxBot"
+      abbreviation: freenode
 
     - name: Rizon
       server: irc.rizon.net
@@ -117,10 +134,10 @@ responses:
       - "ban me"
       - tempban
       - ["You wanted me to ban you", 5]
-    - - message
-      - ".*(https?://[^\\s),]+)(?<!\\.(png|jpg|bmp|txt)).*"
-      - pagetitle
-      - "\\1"
+    #- - message
+      #- ".*(https?://[^\\s),]+)(?<!\\.(png|jpg|bmp|txt)).*"
+      #- pagetitle
+      #- "\\1"
     - - command
       - "echo +([^ ].*)"
       - message

@@ -289,19 +289,22 @@ class Client:
         if com.command == "JOIN":
             if areIrcNamesEqual(com.hostmask.nick, self.nick):
                 self.channelinfos.append(ChannelInfo(com.args[0]))
-            self.get_channel_info(com.args[0]).members.append(MemberInfo(com.hostmask))
+            chan = self.get_channel_info(com.args[0])
+            if chan: chan.members.append(MemberInfo(com.hostmask))
 
         elif com.command == "PART":
             if areIrcNamesEqual(com.hostmask.nick, self.nick):
                 self.remove_channel_info(com.args[0])
             else:
-                self.get_channel_info(com.args[0]).remove_member(com.hostmask.nick)
+                chan = self.get_channel_info(com.args[0])
+                if chan: chan.remove_member(com.hostmask.nick)
 
         elif com.command == "KICK":
             if areIrcNamesEqual(com.args[1], self.nick):
                 self.remove_channel_info(com.args[0])
             else:
-                self.get_channel_info(com.args[0]).remove_member(com.args[1])
+                chan = self.get_channel_info(com.args[0])
+                if chan: chan.remove_member(com.args[1])
 
         elif com.command == "NICK":
             if areIrcNamesEqual(com.hostmask.nick, self.nick):
@@ -338,26 +341,27 @@ class Client:
 
         elif com.command == "353": # NAMES reply
             channelinfo = self.get_channel_info(com.args[2])
-            for i in com.args[3].split(" "):
-                if i[0] == "@":
-                    nick = i[1:]
-                    mode = Mode("+o")
-                elif i[0] == "+":
-                    nick = i[1:]
-                    mode = Mode("+v")
-                elif i[0] == "%":
-                    nick = i[1:]
-                    mode = Mode("+h")
-                elif i[0] == "&":
-                    nick = i[1:]
-                    mode = Mode("+a")
-                elif i[0] == "~":
-                    nick = i[1:]
-                    mode = Mode("+q")
-                else:
-                    nick = i
-                    mode = Mode()
-                channelinfo.members.append(MemberInfo(Hostmask("!%s" % (nick)), mode))
+            if channelinfo:
+                for i in com.args[3].split(" "):
+                    if i[0] == "@":
+                        nick = i[1:]
+                        mode = Mode("+o")
+                    elif i[0] == "+":
+                        nick = i[1:]
+                        mode = Mode("+v")
+                    elif i[0] == "%":
+                        nick = i[1:]
+                        mode = Mode("+h")
+                    elif i[0] == "&":
+                        nick = i[1:]
+                        mode = Mode("+a")
+                    elif i[0] == "~":
+                        nick = i[1:]
+                        mode = Mode("+q")
+                    else:
+                        nick = i
+                        mode = Mode()
+                    channelinfo.members.append(MemberInfo(Hostmask("!%s" % (nick)), mode))
 
         elif com.command == "001": # WELCOME reply
             for i in self.networkinfo["autorun"]:
