@@ -79,7 +79,7 @@ class Command:
                 self.args = filter(lambda i: i, self.args)
 
         # CTCP
-        if len(self.args) == 2 and self.args[1][0] == "\x01" and self.args[1][-1] == "\x01" and (self.command == "PRIVMSG" or self.command == "NOTICE"):
+        if len(self.args) == 2 and len(self.args[1]) >= 2 and self.args[1][0] == "\x01" and self.args[1][-1] == "\x01" and (self.command == "PRIVMSG" or self.command == "NOTICE"):
             if self.command == "PRIVMSG":
                 self.command = "CTCP"
             else:

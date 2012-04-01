@@ -82,6 +82,8 @@ def get_page_title(url):
         return "(error)"
     if 'text/html' not in response.headers['Content-Type']:
         raise Exception, "Not HTML."
+    if int(response.headers["Content-Length"]) > 200000:
+        raise Exception, "Content too large."
     html = response.read() # TODO decode
     response.close()
 

@@ -248,7 +248,7 @@ def run_action(action, match, cmd):
         try:
             title = misc.get_page_title(match.expand(action[1]))
         except Exception as e:
-            if e.message == 'Not HTML.':
+            if e.message == 'Not HTML.' or e.message == "Content too large.":
                 return
             else:
                 raise e
