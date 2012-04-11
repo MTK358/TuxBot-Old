@@ -14,7 +14,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see http://www.gnu.org/licenses/gpl-3.0.html .
 
-import re, socket, time, ssl, threading
+import re, socket, time, ssl, eventloop
 
 def areIrcNamesEqual(a, b):
     return a.lower() == b.lower() # FIXME
@@ -98,6 +98,7 @@ class Command:
         return "%s(%r)" % (self.__class__, self.__dict__)
 
 
+# TODO it might just be better to store modes as strings, and to have a function this applies one mode string to another
 class Mode:
 
     def __init__(self, string = ""):
@@ -128,6 +129,11 @@ class Mode:
     def contains(self, char):
         return self.string.find(char) != -1
 
+    def contains_any(self, chars):
+        for char in chars:
+            if self.string.find(char) != -1: return True
+        return False
+
 
 class MemberInfo:
 
@@ -157,48 +163,107 @@ class ChannelInfo:
 
 class Client:
 
-    def __init__(self, networkinfo):
+    def __init__(self, evloop, networkinfo):
         self.networkinfo = networkinfo
-        self.on_command_sent_callback = None
+        self.command_sent_callbacks = []
+        self.command_received_callbacks = []
         self.ping_timer = None
+        self.welcome_timer = None
         self.ping_status = ""
         self.tempban_timers = []
+        self.evloop = evloop
+        self.linebuf = ""
+        self.noreconnect = False
+        # default nick prefixes, in case the server doesn't say
+        self.nickprefixes = ("qaohv", "~&@%+")
+        self.connected = False
+        self.connect()
+
+    def on_connected(self):
+        print 'connected'
+        self.connected = True
+        self.nick = self.networkinfo["identity"]["nick"]
+        self.send_cmd(u"NICK %s" % (self.networkinfo["identity"]["nick"]))
+        self.send_cmd(u"USER %s 8 * :%s" % (self.networkinfo["identity"]["username"], self.networkinfo["identity"]["realname"]))
+        self.nick = self.networkinfo["identity"]["nick"]
+        self.mode = Mode()
+        self.channelinfos = []
+
+    def on_socket_readyread(self):
+        print 'readyread'
+        if not self.connected:
+            self.on_connected()
+
+        c = self.socket.read(1)
+        if c == "":
+            self.connected = False
+            self.evloop.cancel_timer(self.ping_timer)
+            self.evloop.cancel_timer(self.welcome_timer)
+            self.socket.close()
+            if not self.noreconnect: self.evloop.timer(5, self.connect)
+
+        while True:
+            if c == "\r" or c == "\n":
+                try:
+                    self.linebuf = self.linebuf.decode("utf-8")
+                except:
+                    self.linebuf = self.linebuf.decode("iso-8859-15")
+                cmd = Command(self.linebuf, self.nick, self)
+                if cmd.is_valid:
+                    self._process_incoming_command(cmd)
+                self.linebuf = ""
+            else:
+                self.linebuf = self.linebuf + c
+            c = self.socket.read(1)
+            if c == "": break
+
+    def on_socket_ex(self):
+        print 'ex'
+        self.connected = False
+        self.socket.close()
+        self.evloop.cancel_timer(self.ping_timer)
+        self.evloop.cancel_timer(self.welcome_timer)
+        if not self.noreconnect: self.evloop.timer(5, self.connect)
+
+    def on_disconnected(self):
+        print 'discon'
+        self.connected = False
+        self.evloop.cancel_timer(self.ping_timer)
+        self.evloop.cancel_timer(self.welcome_timer)
+        if not self.noreconnect: self.evloop.timer(5, self.connect)
+
+    def ping(self):
+        self.evloop.cancel_timer(self.ping_timer)
+        self.ping_status = "TuxBot" # "TuxBot" is just a random string here, it doesn't mean anything
+        self.send_cmd("PING TuxBot")
+        self.ping_timer = self.evloop.timer(15, self.on_ping_timeout)
+
+
+    def on_ping_timeout(self):
+        self.socket.close()
+        if not self.noreconnect: self.evloop.timer(5, self.connect)
+
+    def on_welcome_timer(self):
+        print 'welcome timer'
+        self.socket.close()
+        self.evloop.timer(5, self.connect)
 
     def set_on_command_sent_callback(self, callback):
         self.on_command_sent_callback = callback
 
-    def send_line(self, line, nocallback = False):
-        if self.on_command_sent_callback and not nocallback: self.on_command_sent_callback(self, line)
+    def send_cmd(self, line):
+        for i in self.command_sent_callbacks: i(self, line)
         self.socket.send(line.encode("utf-8") + "\r\n")
 
     def connect(self):
+        self.noreconnect = False
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if self.networkinfo["ssl"]:
             self.socket = ssl.wrap_socket(self.socket)
 
         self.socket.connect((self.networkinfo["server"], self.networkinfo["port"]))
-        self.send_line(u"NICK %s" % (self.networkinfo["identity"]["nick"]))
-        self.send_line(u"USER %s 8 * :%s" % (self.networkinfo["identity"]["username"], self.networkinfo["identity"]["realname"]))
-
-        self.nick = self.networkinfo["identity"]["nick"]
-        self.mode = Mode()
-        self.channelinfos = []
-
-        self.welcome_timeout_timer = threading.Timer(30, self.on_welcome_timeout)
-
-    def on_ping_timer(self):
-        if self.ping_status is "":
-            self.ping_status = "TuxBot"
-            self.send_command("PING TuxBot")
-            self.ping_timer = threading.Timer(15, self.on_ping_timer)
-        else:
-            self.socket.close()
-            if self.ping_timer: self.ping_timer.cancel()
-            self.ping_timer = threading.Timer(5, self.connect)
-
-    def on_welcome_timeout(self):
-        self.socket.close()
-        self.ping_timer = threading.Timer(5, self.connect)
+        self.welcome_timer = self.evloop.timer(45, self.on_welcome_timer)
+        self.evloop.socket(self.socket, self.on_socket_readyread, self.on_socket_ex)
 
     def tempban(self, channel, nick, reason, timeout):
         hostmask = self.get_channel_info(channel).get_member(nick).hostmask.host
@@ -206,41 +271,21 @@ class Client:
             hostmask = "*!*@" + hostmask
         else:
             hostmask = nick + "!*@*"
-        self.send_line("MODE %s +b %s" % (channel, hostmask))
-        self.send_line("KICK %s %s :%s (Temporary ban, %i seconds)" % (channel, nick, reason, timeout))
-        timer = threading.Timer(timeout, self.on_tempban_timeout, [channel, hostmask])
+        self.send_cmd("MODE %s +b %s" % (channel, hostmask))
+        self.send_cmd("KICK %s %s :%s (Temporary ban, %i seconds)" % (channel, nick, reason, timeout))
+        timer = self.evloop.timer(timeout, self.on_tempban_timeout, [channel, hostmask])
         self.tempban_timers.append(timer)
-        timer.start()
 
-    def on_tempban_timeout(self, channel, hostmask):
-        self.send_line("MODE %s -b %s" % (channel, hostmask))
+    def on_tempban_timeout(self, chanandhostmask):
+        self.send_cmd("MODE %s -b %s" % chanandhostmask)
         self.tempban_timers.remove(timer)
 
-    def read_command(self):
-        line = ""
-        try:
-            while True:
-                line += self.socket.recv(1)
-                if len(line) >= 2 and line[-2:] == "\r\n":
-                    break
-            line = line.strip()
-            try:
-                line = line.decode("utf-8")
-            except:
-                line = line.decode("iso-8859-15")
-            com = Command(line, time.time(), self)
-            if com.is_valid:
-                self.process_incoming_command(com)
-            return com
-        except KeyboardInterrupt:
-            pass
-
-    def send_message(self, message, to, nocallback = False):
+    def send_msg(self, message, to):
         first = True
         for line in message.split("\n"):
             if not first:
                 time.sleep(1)
-            self.send_line(u"PRIVMSG " + to + " :" + line, nocallback)
+            self.send_cmd(u"PRIVMSG " + to + " :" + line)
             first = False
             
     def send_ctcp(self, to, cmd, arg = None):
@@ -248,30 +293,31 @@ class Client:
             message = "%s %s" % (cmd, arg)
         else:
             message = cmd
-        self.send_line(u"PRIVMSG %s :\001%s\001" % (to, message))
+        self.send_cmd(u"PRIVMSG %s :\001%s\001" % (to, message))
     
     def send_ctcpreply(self, to, cmd, arg = None):
         if arg:
             message = "%s %s" % (cmd, arg)
         else:
             message = cmd
-        self.send_line(u"NOTICE %s :\001%s\001" % (to, message))
+        self.send_cmd(u"NOTICE %s :\001%s\001" % (to, message))
 
     def send_notice(self, message, nick):
         first = True
         for line in message.split("\n"):
             if not first:
                 time.sleep(1)
-            self.send_line(u"NOTICE " + nick + " :" + line)
+            self.send_cmd(u"NOTICE " + nick + " :" + line)
             first = False
 
     def send_kick(self, channel, nick, message = ""):
-        self.send_line(u"KICK %s %s %s" % (channel, nick, message))
+        self.send_cmd(u"KICK %s %s %s" % (channel, nick, message))
 
     def quit(self, message = None):
+        self.noreconnect = True
         if message == None:
             message = self.networkinfo["identity"]["quitmessage"]
-        self.send_line(u"QUIT :%s" % (message))
+        self.send_cmd(u"QUIT :%s" % (message))
         self.socket.close()
 
     def get_channel_info(self, channel):
@@ -285,97 +331,96 @@ class Client:
                 del self.channelinfos[i]
                 break
 
-    def process_incoming_command(self, com):
-        if com.command == "JOIN":
-            if areIrcNamesEqual(com.hostmask.nick, self.nick):
-                self.channelinfos.append(ChannelInfo(com.args[0]))
-            chan = self.get_channel_info(com.args[0])
-            if chan: chan.members.append(MemberInfo(com.hostmask))
+    def _process_incoming_command(self, cmd):
+        for i in self.command_received_callbacks: i(cmd)
 
-        elif com.command == "PART":
-            if areIrcNamesEqual(com.hostmask.nick, self.nick):
-                self.remove_channel_info(com.args[0])
+        if cmd.command == "JOIN" and len(cmd.args) >= 1:
+            if areIrcNamesEqual(cmd.hostmask.nick, self.nick):
+                self.channelinfos.append(ChannelInfo(cmd.args[0]))
+            chan = self.get_channel_info(cmd.args[0])
+            if chan: chan.members.append(MemberInfo(cmd.hostmask))
+
+        elif cmd.command == "PART" and len(cmd.args) >= 1:
+            if areIrcNamesEqual(cmd.hostmask.nick, self.nick):
+                self.remove_channel_info(cmd.args[0])
             else:
-                chan = self.get_channel_info(com.args[0])
-                if chan: chan.remove_member(com.hostmask.nick)
+                chan = self.get_channel_info(cmd.args[0])
+                if chan: chan.remove_member(cmd.hostmask.nick)
 
-        elif com.command == "KICK":
-            if areIrcNamesEqual(com.args[1], self.nick):
-                self.remove_channel_info(com.args[0])
+        elif cmd.command == "KICK" and len(cmd.args) >= 2:
+            if areIrcNamesEqual(cmd.args[1], self.nick):
+                self.remove_channel_info(cmd.args[0])
             else:
-                chan = self.get_channel_info(com.args[0])
-                if chan: chan.remove_member(com.args[1])
+                chan = self.get_channel_info(cmd.args[0])
+                if chan: chan.remove_member(cmd.args[1])
 
-        elif com.command == "NICK":
-            if areIrcNamesEqual(com.hostmask.nick, self.nick):
-                self.nick = com.args[0]
+        elif cmd.command == "NICK" and len(cmd.args) >= 1:
+            if areIrcNamesEqual(cmd.hostmask.nick, self.nick):
+                self.nick = cmd.args[0]
             for channel in self.channelinfos:
-                member = channel.get_member(com.hostmask.nick)
+                member = channel.get_member(cmd.hostmask.nick)
                 if member:
-                    member.hostmask.nick = com.args[0]
+                    member.hostmask.nick = cmd.args[0]
             
-        elif com.command == "QUIT":
-            if areIrcNamesEqual(com.hostmask.nick, self.nick):
+        elif cmd.command == "QUIT":
+            if areIrcNamesEqual(cmd.hostmask.nick, self.nick):
                 pass
                 # XXX do something
             else:
                 for channel in self.channelinfos:
-                    channel.remove_member(com.hostmask.nick)
+                    channel.remove_member(cmd.hostmask.nick)
 
-        elif com.command == "MODE":
-            if areIrcNamesEqual(com.args[0], self.nick):
-                self.mode.change(Mode(com.args[1]))
+        elif cmd.command == "MODE" and len(cmd.args) >= 2:
+            if areIrcNamesEqual(cmd.args[0], self.nick):
+                self.mode.change(Mode(cmd.args[1]))
             else:
-                chan = self.get_channel_info(com.args[0])
-                if chan and len(com.args) >= 3:
-                    if len(com.args[1]) >= 2 and len(com.args) == len(com.args[1]) + 1:
-                        for i in range(1, len(com.args[1])):
-                            member = chan.get_member(com.args[i + 1])
+                chan = self.get_channel_info(cmd.args[0])
+                if chan and len(cmd.args) >= 3:
+                    if len(cmd.args[1]) >= 2 and len(cmd.args) == len(cmd.args[1]) + 1:
+                        for i in range(1, len(cmd.args[1])):
+                            member = chan.get_member(cmd.args[i + 1])
                             if member:
-                                member.mode.change(Mode("%s%s" % (com.args[1][0], com.args[1][i])))
+                                member.mode.change(Mode("%s%s" % (cmd.args[1][0], cmd.args[1][i])))
                     else:
-                        for i in range(1, len(com.args), 2):
-                            member = chan.get_member(com.args[i + 1])
+                        for i in range(1, len(cmd.args), 2):
+                            member = chan.get_member(cmd.args[i + 1])
                             if member:
-                                member.mode.change(Mode(com.args[i]))
+                                member.mode.change(Mode(cmd.args[i]))
 
-        elif com.command == "353": # NAMES reply
-            channelinfo = self.get_channel_info(com.args[2])
+        elif cmd.command == "353" and len(cmd.args) >= 4: # NAMES reply
+            channelinfo = self.get_channel_info(cmd.args[2])
             if channelinfo:
-                for i in com.args[3].split(" "):
-                    if i[0] == "@":
+                for i in cmd.args[3].split(" "):
+                    prefixindex = self.nickprefixes[1].find(i[0])
+                    if prefixindex != -1:
+                        mode = Mode(self.nickprefixes[0][prefixindex])
                         nick = i[1:]
-                        mode = Mode("+o")
-                    elif i[0] == "+":
-                        nick = i[1:]
-                        mode = Mode("+v")
-                    elif i[0] == "%":
-                        nick = i[1:]
-                        mode = Mode("+h")
-                    elif i[0] == "&":
-                        nick = i[1:]
-                        mode = Mode("+a")
-                    elif i[0] == "~":
-                        nick = i[1:]
-                        mode = Mode("+q")
                     else:
                         nick = i
                         mode = Mode()
                     channelinfo.members.append(MemberInfo(Hostmask("!%s" % (nick)), mode))
 
-        elif com.command == "001": # WELCOME reply
+        elif cmd.command == "001": # WELCOME reply
             for i in self.networkinfo["autorun"]:
-                self.send_line(i)
+                self.send_cmd(i)
             self.ping_status = ""
-            self.welcome_timeout_timer.cancel()
-            self.ping_timer = threading.Timer(45, self.on_ping_timer)
+            self.evloop.cancel_timer(self.welcome_timer)
+            self.ping()
 
-        elif com.command == "PONG":
-            if com.args[1] == self.ping_status:
+        elif cmd.command == "005":
+            match = re.match(r'PREFIX=\(([^ ]+)\)([^ ]+)', cmd.line)
+            if match:
+                self.nickprefixes = (match.group(1), match.group(2))
+
+        elif cmd.command == "PONG" and len(cmd.args) >= 2:
+            if cmd.args[1] == self.ping_status:
                 self.ping_status = ""
-                if self.ping_timer: self.ping_timer.cancel()
-                self.ping_timer = threading.Timer(45, self.on_ping_timer)
+                self.evloop.cancel_timer(self.ping_timer)
+                self.ping_timer = self.evloop.timer(90, self.ping)
 
-        elif com.command == "PING":
-            self.send_line(u"PONG :%s" % com.args[0])
+        elif cmd.command == "PING":
+            if len(cmd.args) >= 1:
+                self.send_cmd(u"PONG :%s" % cmd.args[0])
+            else:
+                self.send_cmd("PONG")
         
