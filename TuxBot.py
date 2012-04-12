@@ -274,22 +274,20 @@ def get_nick_color(nick):
     return nick_colors[hash(nick) % len(nick_colors)]
 
 def relay(nick, channel, net, text):
-    pass
-    #try:
-        #for relay_group in config.contents["relaying"]:
-            #if [net, channel] in relay_group["channels"]:
-                #for relay_group_entry in relay_group["channels"]:
-                    #if relay_group_entry == [net, channel]: continue
-                    #message = "\x03%i<%s" % (get_nick_color(nick), nick)
-                    #if (relay_group["show-channel-name"]):
-                        #message += "@%s" % (channel)
-                    #if (relay_group["show-network-name"]):
-                        #message += "@%s" % (net)
-                    #message += ">\x0f %s" % (text)
-                    #if cmd: relayed_msgs.append(cmd)
-                    #get_client_by_name(relay_group_entry[0]).send_msg(message, relay_group_entry[1], nocallback=True)
-    #except KeyError:
-        #pass
+    try:
+        for relay_group in config.contents["relaying"]:
+            if [net, channel] in relay_group["channels"]:
+                for relay_group_entry in relay_group["channels"]:
+                    if relay_group_entry == [net, channel]: continue
+                    message = "\x03%i<%s" % (get_nick_color(nick), nick)
+                    if (relay_group["show-channel-name"]):
+                        message += "@%s" % (channel)
+                    if (relay_group["show-network-name"]):
+                        message += "@%s" % (net)
+                    message += ">\x0f %s" % (text)
+                    get_client_by_name(relay_group_entry[0]).send_msg(message, relay_group_entry[1], "relay")
+    except KeyError:
+        pass
 
 
 flood_data = {}
@@ -329,7 +327,8 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-def on_command_sent(client, line):
+def on_command_sent(client, line, callbackinfo):
+    if callbackinfo == "relay": return
     match = re.match(r'PRIVMSG ([^ ]+) :?([^ ].*)', line)
     if match:
         relay(client.nick, match.group(1), client.networkinfo["name"], match.group(2))

@@ -177,7 +177,11 @@ class Client:
         # default nick prefixes, in case the server doesn't say
         self.nickprefixes = ("qaohv", "~&@%+")
         self.connected = False
-        self.connect()
+
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if self.networkinfo["ssl"]:
+            self.socket = ssl.wrap_socket(self.socket)
+        self.evloop.socket(self.socket, self.on_socket_readyread, self.on_socket_ex)
 
     def on_connected(self):
         print 'connected'
@@ -194,8 +198,10 @@ class Client:
         if not self.connected:
             self.on_connected()
 
-        c = self.socket.read(1)
-        if c == "":
+        if not self.socket: return
+
+        c = self.socket.recv(1)
+        if c == "" or not c:
             self.connected = False
             self.evloop.cancel_timer(self.ping_timer)
             self.evloop.cancel_timer(self.welcome_timer)
@@ -214,8 +220,8 @@ class Client:
                 self.linebuf = ""
             else:
                 self.linebuf = self.linebuf + c
-            c = self.socket.read(1)
-            if c == "": break
+            c = self.socket.recv(1)
+            if c == "" or not c: break
 
     def on_socket_ex(self):
         print 'ex'
@@ -251,19 +257,14 @@ class Client:
     def set_on_command_sent_callback(self, callback):
         self.on_command_sent_callback = callback
 
-    def send_cmd(self, line):
-        for i in self.command_sent_callbacks: i(self, line)
+    def send_cmd(self, line, callbackinfo = None):
+        for i in self.command_sent_callbacks: i(self, line, callbackinfo)
         self.socket.send(line.encode("utf-8") + "\r\n")
 
     def connect(self):
         self.noreconnect = False
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if self.networkinfo["ssl"]:
-            self.socket = ssl.wrap_socket(self.socket)
-
         self.socket.connect((self.networkinfo["server"], self.networkinfo["port"]))
         self.welcome_timer = self.evloop.timer(45, self.on_welcome_timer)
-        self.evloop.socket(self.socket, self.on_socket_readyread, self.on_socket_ex)
 
     def tempban(self, channel, nick, reason, timeout):
         hostmask = self.get_channel_info(channel).get_member(nick).hostmask.host
@@ -280,12 +281,12 @@ class Client:
         self.send_cmd("MODE %s -b %s" % chanandhostmask)
         self.tempban_timers.remove(timer)
 
-    def send_msg(self, message, to):
+    def send_msg(self, message, to, callbackinfo = None):
         first = True
         for line in message.split("\n"):
             if not first:
                 time.sleep(1)
-            self.send_cmd(u"PRIVMSG " + to + " :" + line)
+            self.send_cmd(u"PRIVMSG " + to + " :" + line, callbackinfo)
             first = False
             
     def send_ctcp(self, to, cmd, arg = None):

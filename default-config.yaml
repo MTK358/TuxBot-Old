@@ -24,9 +24,46 @@ networks:
           - "JOIN #linux,#freiwuppertal"
       abbreviation: esper
 
+    - name: OFTC
+      server: irc.oftc.net
+      port: 6697
+      ssl: true
+      identity: default
+      ignore:
+          - ".*services\\.oftc\\.net"
+      autorun:
+          - "JOIN #linux"
+      abbreviation: oftc
+
+    - name: Freenode
+      server: irc.freenode.net
+      port: 6697
+      ssl: true
+      identity: freenode
+      ignore:
+          - ".*services\\.freenode\\.net"
+      autorun:
+          - "JOIN #TuxBot"
+      abbreviation: freenode
+
+    - name: Rizon
+      server: irc.rizon.net
+      port: 6697
+      ssl: true
+      identity: default
+      ignore:
+          - ".*Microsoft.com"
+          - ".*.rizon.net"
+      autorun:
+          - "JOIN #freiwuppertal"
+      abbreviation: rizon
+
 relaying:
     - show-network-name: true
       show-channel-name: false
+      channels:
+          - ["EsperNet", "#linux"]
+          - ["OFTC", "#linux"]
 
 command-prefixes:
     - "!"
